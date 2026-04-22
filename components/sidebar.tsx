@@ -3,7 +3,6 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { NavItem } from "@/lib/types";
-import { PrimaryButton } from "@/components/ui";
 
 function NavIcon({ type, active }: { type: NavItem["icon"]; active: boolean }) {
   const stroke = active ? "#ff2026" : "#8f8d97";
@@ -51,16 +50,16 @@ export function Sidebar({
 
   return (
     <aside className="border-b border-line bg-[#121214]/95 md:min-h-screen md:border-b-0 md:border-r">
-      <div className="flex h-full flex-col gap-7 px-5 py-6">
+      <div className="flex h-full flex-col gap-5 px-3 py-4">
         <div className="flex items-center gap-4 px-2">
-          <div className="grid h-10 w-10 place-items-center bg-brand text-lg font-black uppercase text-white">Z</div>
+          <div className="grid h-9 w-9 place-items-center bg-brand text-base font-black uppercase text-white">Z</div>
           <div>
-            <div className="display-title text-2xl text-white">{title}</div>
-            <div className="mt-1 text-xs uppercase tracking-[0.18em] text-mute">{subtitle}</div>
+            <div className="display-title text-xl text-white">{title}</div>
+            <div className="mt-1 text-[10px] uppercase tracking-[0.18em] text-mute">{subtitle}</div>
           </div>
         </div>
 
-      <nav className="grid gap-2">
+      <nav className="grid gap-1.5">
         {items.map((item) => {
           const active = item.href === "/projects" ? pathname.startsWith("/projects") : pathname === item.href;
 
@@ -68,7 +67,7 @@ export function Sidebar({
             <Link
               key={`${item.href}-${item.label}`}
               href={item.href}
-              className={`group flex items-center gap-4 border-l-4 px-4 py-4 text-sm font-medium uppercase tracking-[0.14em] transition ${
+              className={`group flex items-center gap-3.5 border-l-4 px-4 py-3 text-[11px] font-medium uppercase tracking-[0.16em] transition md:text-xs ${
                 active
                   ? "border-brand bg-black text-white"
                   : "border-transparent bg-white/[0.02] text-mute hover:bg-white/[0.04] hover:text-white"
@@ -81,7 +80,12 @@ export function Sidebar({
         })}
       </nav>
 
-      <PrimaryButton className="mt-auto w-full justify-center">{ctaLabel}</PrimaryButton>
+      <Link
+        href="/projects/create"
+        className="mt-auto inline-flex w-full items-center justify-center gap-2 bg-brand px-4 py-2.5 text-[11px] font-bold uppercase tracking-[0.18em] text-white transition hover:bg-[#ff343a] md:text-xs"
+      >
+        {ctaLabel}
+      </Link>
 
       <div className="grid gap-4 border-t border-line px-2 pt-6 text-sm text-mute">
         <a href="#support" className="hover:text-white">Support</a>
