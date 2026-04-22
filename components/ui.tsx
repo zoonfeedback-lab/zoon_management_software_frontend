@@ -21,12 +21,12 @@ export function Section({
 }: SectionProps) {
   return (
     <section className={`panel-surface overflow-hidden ${className}`.trim()}>
-      <div className="flex items-center justify-between gap-4 border-b border-line px-6 py-5 md:px-7">
+      <div className="flex items-center justify-between gap-4 border-b border-line px-4 py-3.5 md:px-5">
         <div>
           {eyebrow ? (
             <p className="mb-2 text-[11px] font-medium uppercase tracking-[0.22em] text-mute">{eyebrow}</p>
           ) : null}
-          <h2 className="text-2xl font-semibold text-white">{title}</h2>
+          <h2 className="text-lg font-semibold text-white md:text-xl">{title}</h2>
         </div>
         {action ? (
           <Link href={actionHref} className="text-sm font-semibold uppercase tracking-[0.2em] text-brand">
@@ -68,7 +68,7 @@ export function ProgressBar({ value, tone = "red" }: { value: number; tone?: "re
 export function PrimaryButton({ children, className = "" }: { children: React.ReactNode; className?: string }) {
   return (
     <button
-      className={`inline-flex items-center justify-center gap-2 bg-brand px-5 py-3 text-sm font-bold uppercase tracking-[0.16em] text-white transition hover:bg-[#ff343a] ${className}`.trim()}
+      className={`inline-flex items-center justify-center gap-2 bg-brand px-4 py-2.5 text-xs font-bold uppercase tracking-[0.16em] text-white transition hover:bg-[#ff343a] md:px-5 md:py-3 md:text-sm ${className}`.trim()}
     >
       {children}
     </button>
@@ -78,7 +78,7 @@ export function PrimaryButton({ children, className = "" }: { children: React.Re
 export function GhostButton({ children, className = "" }: { children: React.ReactNode; className?: string }) {
   return (
     <button
-      className={`inline-flex items-center justify-center gap-2 border border-zinc-200 px-5 py-3 text-sm font-bold uppercase tracking-[0.16em] text-white transition hover:border-white hover:bg-white/5 ${className}`.trim()}
+      className={`inline-flex items-center justify-center gap-2 border border-zinc-200 px-4 py-2.5 text-xs font-bold uppercase tracking-[0.16em] text-white transition hover:border-white hover:bg-white/5 md:px-5 md:py-3 md:text-sm ${className}`.trim()}
     >
       {children}
     </button>

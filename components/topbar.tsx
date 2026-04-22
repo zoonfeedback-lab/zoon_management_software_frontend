@@ -28,27 +28,27 @@ function GearIcon() {
 export function Topbar({ sectionTitle }: { sectionTitle?: string }) {
   return (
     <header className="sticky top-0 z-20 border-b border-line bg-black/90 backdrop-blur">
-      <div className="flex flex-col gap-4 px-6 py-4 md:flex-row md:items-center md:justify-between">
+      <div className="mx-auto flex w-full max-w-[1680px] flex-col gap-3 px-4 py-2.5 md:flex-row md:items-center md:justify-between md:px-5">
         <div className="flex min-w-0 flex-1 flex-col gap-4 md:flex-row md:items-center">
-          <div className="display-title text-2xl uppercase text-brand">{sectionTitle ?? "Zoonlabs"}</div>
-          <label className="flex min-w-0 flex-1 items-center gap-3 border border-line bg-white/[0.03] px-4 py-3 md:max-w-md">
+          <div className="display-title text-lg uppercase text-brand">{sectionTitle ?? "zoon"}</div>
+          <label className="flex min-w-0 flex-1 items-center gap-3 border border-line bg-white/[0.03] px-3 py-2 md:max-w-sm">
             <SearchIcon />
             <input
               aria-label="Search projects"
               placeholder="Search project reviews..."
-              className="min-w-0 flex-1 bg-transparent text-sm text-white placeholder:text-mute"
+              className="min-w-0 flex-1 bg-transparent text-xs text-white placeholder:text-mute md:text-sm"
             />
           </label>
         </div>
 
         <div className="flex items-center gap-3">
-          <button aria-label="Notifications" className="grid h-10 w-10 place-items-center">
+          <button aria-label="Notifications" className="grid h-8 w-8 place-items-center">
             <BellIcon />
           </button>
-          <button aria-label="Settings" className="grid h-10 w-10 place-items-center">
+          <button aria-label="Settings" className="grid h-8 w-8 place-items-center">
             <GearIcon />
           </button>
-          <div className="grid h-11 w-11 place-items-center rounded-full border border-line bg-gradient-to-br from-sky-900 to-sky-500 text-sm font-bold text-white">
+          <div className="grid h-9 w-9 place-items-center rounded-full border border-line bg-gradient-to-br from-sky-900 to-sky-500 text-[11px] font-bold text-white">
             GK
           </div>
         </div>

@@ -18,11 +18,11 @@ export function DashboardShell({
   sectionTitle?: string;
 }) {
   return (
-    <div className="grid min-h-screen bg-ink md:grid-cols-[280px_minmax(0,1fr)]">
+    <div className="grid min-h-screen bg-ink md:grid-cols-[224px_minmax(0,1fr)]">
       <Sidebar title={brandTitle} subtitle={brandSubtitle} items={navItems} ctaLabel={ctaLabel} />
       <div className="min-w-0">
         <Topbar sectionTitle={sectionTitle} />
-        <main className="px-5 py-6 md:px-8 md:py-7">{children}</main>
+        <main className="mx-auto w-full max-w-[1680px] px-4 py-4 md:px-5 md:py-5">{children}</main>
       </div>
     </div>
   );
