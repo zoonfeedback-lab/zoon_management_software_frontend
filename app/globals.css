@@ -1,0 +1,65 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Segoe UI", "Trebuchet MS", sans-serif;
+  --font-display: Bahnschrift, "Arial Narrow", "Segoe UI", sans-serif;
+  --color-ink: #0b0b0d;
+  --color-panel: #171719;
+  --color-panel-2: #1d1d20;
+  --color-line: #2f2f34;
+  --color-copy: #f3f0ed;
+  --color-mute: #9897a1;
+  --color-brand: #ff2026;
+  --color-brand-soft: rgba(255, 32, 38, 0.12);
+  --color-success: #2fd184;
+}
+
+@layer base {
+  * {
+    @apply border-line;
+  }
+
+  html {
+    @apply bg-ink;
+  }
+
+  body {
+    @apply font-sans text-copy;
+    background:
+      radial-gradient(circle at top right, rgba(255, 32, 38, 0.08), transparent 24%),
+      radial-gradient(circle at bottom left, rgba(255, 255, 255, 0.03), transparent 18%),
+      linear-gradient(180deg, #111214 0%, #09090b 100%);
+  }
+
+  a {
+    @apply transition-colors;
+  }
+
+  button,
+  input,
+  textarea,
+  select {
+    @apply outline-none;
+  }
+
+  ::selection {
+    background: rgba(255, 32, 38, 0.35);
+  }
+}
+
+@layer utilities {
+  .panel-surface {
+    @apply border border-line bg-gradient-to-b from-[#1d1d20] to-[#151517] shadow-[0_18px_48px_rgba(0,0,0,0.22)];
+  }
+
+  .display-title {
+    @apply font-display font-bold tracking-[0.02em];
+  }
+
+  .grid-bg {
+    background-image:
+      linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+    background-size: 28px 28px;
+  }
+}
