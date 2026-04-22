@@ -31,6 +31,8 @@ Thumbs.db
 !.vscode/tasks.json
 !.vscode/launch.json
 
+# temporary sandbox artifacts
+app/auth/login/page.new.tsx
+
 # typescript
 *.tsbuildinfo
-next-env.d.ts
