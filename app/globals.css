@@ -19,6 +19,14 @@
     @apply border-line;
   }
 
+  [data-width] {
+    width: var(--dynamic-width, 0%);
+  }
+
+  [data-height-chart] {
+    height: var(--chart-height, 0%);
+  }
+
   html {
     @apply bg-ink;
   }
