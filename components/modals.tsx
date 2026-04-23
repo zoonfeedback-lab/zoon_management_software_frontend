@@ -889,3 +889,159 @@ export function CreateTaskModal({
     </Modal>
   );
 }
+export function TaskDetailsModal({
+  isOpen,
+  onClose,
+  task,
+}: {
+  isOpen: boolean;
+  onClose: () => void;
+  task: any;
+}) {
+  const [comments, setComments] = useState<any[]>([]);
+  const [newComment, setNewComment] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  const fetchComments = async () => {
+    if (!task?.id) return;
+    try {
+      const token = localStorage.getItem("access_token");
+      const res = await fetch(`/api/tasks/${task.id}/comments`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (res.ok) {
+        setComments(await res.json());
+      }
+    } catch (err) {
+      console.error("Failed to fetch comments:", err);
+    }
+  };
+
+  React.useEffect(() => {
+    if (isOpen && task?.id) {
+      fetchComments();
+    }
+  }, [isOpen, task?.id]);
+
+  const handleAddComment = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newComment.trim()) return;
+    setLoading(true);
+    try {
+      const token = localStorage.getItem("access_token");
+      const res = await fetch(`/api/tasks/${task.id}/comments`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ content: newComment }),
+      });
+      if (res.ok) {
+        setNewComment("");
+        fetchComments();
+      }
+    } catch (err) {
+      console.error("Failed to add comment:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (!task) return null;
+
+  return (
+    <Modal isOpen={isOpen} onClose={onClose} title="Task Intelligence" size="lg">
+      <div className="grid gap-8 lg:grid-cols-[1fr_300px]">
+        {/* Main Info & Comments */}
+        <div className="grid gap-8">
+          <div>
+            <div className="flex items-center gap-3 mb-2">
+               <span className="text-[10px] font-black uppercase tracking-widest text-brand">{task.project.name}</span>
+               <div className="h-1 w-1 rounded-full bg-[#9897a1]/40" />
+               <span className="text-[10px] font-bold uppercase tracking-widest text-[#9897a1]">{task.status}</span>
+            </div>
+            <h2 className="text-2xl font-bold text-white">{task.title}</h2>
+            <p className="mt-4 text-sm text-[#9897a1] leading-relaxed">{task.description || "No mission description provided."}</p>
+          </div>
+
+          <div className="grid gap-6">
+            <h3 className="text-[10px] font-black uppercase tracking-widest text-white border-b border-white/5 pb-2">Comms Log</h3>
+            <div className="flex flex-col gap-4 max-h-64 overflow-y-auto pr-2 custom-scrollbar">
+              {comments.map((comment) => (
+                <div key={comment.id} className="flex gap-4">
+                  <div className="h-8 w-8 rounded-lg bg-zinc-800 border border-white/5 flex items-center justify-center text-[10px] font-bold text-white shrink-0">
+                    {comment.user?.fullName.split(' ').map((n: any) => n[0]).join('')}
+                  </div>
+                  <div className="grid gap-1">
+                    <div className="flex items-center gap-3">
+                       <span className="text-xs font-bold text-white">{comment.user?.fullName}</span>
+                       <span className="text-[9px] font-bold text-[#9897a1]/40 uppercase tracking-widest">
+                          {new Date(comment.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                       </span>
+                    </div>
+                    <p className="text-xs text-[#9897a1] leading-relaxed">{comment.content}</p>
+                  </div>
+                </div>
+              ))}
+              {comments.length === 0 && (
+                <div className="py-8 text-center text-[10px] font-bold uppercase tracking-widest text-[#9897a1]/30">
+                   No signals recorded.
+                </div>
+              )}
+            </div>
+
+            <form onSubmit={handleAddComment} className="relative mt-2">
+               <textarea
+                 rows={2}
+                 value={newComment}
+                 onChange={(e) => setNewComment(e.target.value)}
+                 placeholder="Enter signal payload..."
+                 className="w-full bg-[#0b0b0d] border border-white/10 rounded-lg px-4 py-3 text-xs text-white outline-none focus:border-brand/30 resize-none pr-12"
+               />
+               <button 
+                 disabled={loading || !newComment.trim()}
+                 type="submit"
+                 className="absolute right-3 bottom-3 text-brand hover:text-[#ff343a] disabled:opacity-30 transition-colors"
+               >
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M22 2 11 13M22 2l-7 20-4-9-9-4 20-7z"/></svg>
+               </button>
+            </form>
+          </div>
+        </div>
+
+        {/* Sidebar Metadata */}
+        <div className="grid gap-6 border-l border-white/5 pl-8">
+           <div className="grid gap-2">
+              <span className="text-[9px] font-black uppercase tracking-widest text-[#9897a1]">Assignee</span>
+              <div className="flex items-center gap-3">
+                 <div className="h-6 w-6 rounded-full bg-zinc-800 border border-white/5 flex items-center justify-center text-[8px] font-bold text-white">
+                    {task.assignedTo?.fullName.split(' ').map((n: any) => n[0]).join('') || '?'}
+                 </div>
+                 <span className="text-xs font-bold text-white/80">{task.assignedTo?.fullName || "Unassigned"}</span>
+              </div>
+           </div>
+           
+           <div className="grid gap-2">
+              <span className="text-[9px] font-black uppercase tracking-widest text-[#9897a1]">Priority</span>
+              <div className="flex items-center gap-2">
+                 <div className={`h-1.5 w-1.5 rounded-full ${task.priority === 'CRITICAL' ? 'bg-brand shadow-[0_0_8px_rgba(255,32,38,0.5)]' : 'bg-zinc-600'}`} />
+                 <span className="text-[10px] font-black uppercase tracking-widest text-white">{task.priority}</span>
+              </div>
+           </div>
+
+           <div className="grid gap-2">
+              <span className="text-[9px] font-black uppercase tracking-widest text-[#9897a1]">Due Date</span>
+              <span className="font-mono text-xs font-bold text-white">{task.dueDate ? new Date(task.dueDate).toLocaleDateString() : 'NO DEADLINE'}</span>
+           </div>
+
+           <div className="pt-4 mt-auto border-t border-white/5">
+              <button onClick={onClose} className="w-full py-2.5 rounded-lg border border-white/10 text-[10px] font-black uppercase tracking-widest text-[#9897a1] hover:bg-white/5 hover:text-white transition-all">
+                 Dismiss
+              </button>
+           </div>
+        </div>
+      </div>
+    </Modal>
+  );
+}

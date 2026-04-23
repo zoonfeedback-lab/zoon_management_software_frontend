@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { GhostButton, Section } from "@/components/ui";
-import { CreateTaskModal } from "@/components/modals";
+import { CreateTaskModal, TaskDetailsModal } from "@/components/modals";
 
 interface Task {
   id: string;
@@ -24,6 +24,7 @@ export default function TasksClient() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
+  const [selectedTask, setSelectedTask] = useState<Task | null>(null);
 
   const fetchTasks = async () => {
     try {
@@ -126,6 +127,7 @@ export default function TasksClient() {
               {tasks.filter((t) => t.status === column.id).map((task) => (
                 <article 
                   key={task.id} 
+                  onClick={() => setSelectedTask(task)}
                   className="panel-surface group relative flex flex-col gap-4 rounded-xl bg-[#171719] p-5 shadow-lg border border-transparent hover:border-white/10 transition-all cursor-pointer"
                 >
                   <div className="flex items-start justify-between">
@@ -154,10 +156,10 @@ export default function TasksClient() {
 
                   <div className="absolute bottom-4 right-4 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                      {column.id !== 'TODO' && (
-                       <button onClick={() => handleUpdateStatus(task.id, 'TODO')} className="h-6 w-6 rounded border border-white/10 bg-black/40 flex items-center justify-center text-[10px] text-[#9897a1] hover:text-white">←</button>
+                       <button onClick={(e) => { e.stopPropagation(); handleUpdateStatus(task.id, 'TODO'); }} className="h-6 w-6 rounded border border-white/10 bg-black/40 flex items-center justify-center text-[10px] text-[#9897a1] hover:text-white">←</button>
                      )}
                      {column.id !== 'DONE' && (
-                       <button onClick={() => handleUpdateStatus(task.id, column.id === 'TODO' ? 'IN_PROGRESS' : 'DONE')} className="h-6 w-6 rounded border border-white/10 bg-black/40 flex items-center justify-center text-[10px] text-[#9897a1] hover:text-white">→</button>
+                       <button onClick={(e) => { e.stopPropagation(); handleUpdateStatus(task.id, column.id === 'TODO' ? 'IN_PROGRESS' : 'DONE'); }} className="h-6 w-6 rounded border border-white/10 bg-black/40 flex items-center justify-center text-[10px] text-[#9897a1] hover:text-white">→</button>
                      )}
                   </div>
                 </article>
@@ -177,6 +179,12 @@ export default function TasksClient() {
         isOpen={isTaskModalOpen}
         onClose={() => setIsTaskModalOpen(false)}
         onCreate={() => fetchTasks()}
+      />
+
+      <TaskDetailsModal
+        isOpen={!!selectedTask}
+        onClose={() => setSelectedTask(null)}
+        task={selectedTask}
       />
     </div>
   );
