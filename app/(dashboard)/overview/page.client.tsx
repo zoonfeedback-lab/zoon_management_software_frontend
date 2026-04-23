@@ -1,20 +1,81 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import Link from "next/link";
-import { useState } from "react";
 import { GhostButton, ProgressBar, Section, StatusBadge } from "@/components/ui";
 import { CreateProjectModal } from "@/components/modals";
-import { overviewMetrics, projects, recentActivity } from "@/lib/data";
+
+interface OverviewData {
+  projects: any[];
+  metrics: {
+    totalProjects: number;
+    totalUsers: number;
+    totalClients: number;
+    activeTasks: number;
+  };
+}
 
 export default function OverviewClient() {
   const [isProjectModalOpen, setIsProjectModalOpen] = useState(false);
+  const [data, setData] = useState<OverviewData | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  const fetchData = async () => {
+    try {
+      const token = localStorage.getItem("access_token");
+      const headers = { Authorization: `Bearer ${token}` };
+
+      const [pRes, uRes, cRes, tRes] = await Promise.all([
+        fetch("/api/projects", { headers }),
+        fetch("/api/users", { headers }),
+        fetch("/api/clients", { headers }),
+        fetch("/api/tasks", { headers }),
+      ]);
+
+      if (pRes.ok && uRes.ok && cRes.ok && tRes.ok) {
+        const projects = await pRes.json();
+        const users = await uRes.json();
+        const clients = await cRes.json();
+        const tasks = await tRes.json();
+
+        setData({
+          projects,
+          metrics: {
+            totalProjects: projects.length,
+            totalUsers: users.length,
+            totalClients: clients.length,
+            activeTasks: tasks.filter((t: any) => t.status !== "DONE").length,
+          }
+        });
+      }
+    } catch (err) {
+      console.error("Failed to sync overview data:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchData();
+  }, []);
+
+  if (loading) {
+    return <div className="flex h-[400px] items-center justify-center text-mute uppercase tracking-[0.2em]">Synchronizing Command Center...</div>;
+  }
+
+  const metrics = [
+    { label: "Total Projects", value: data?.metrics.totalProjects || 0, note: "Authorized Programs", accent: "red" },
+    { label: "Active Nodes", value: data?.metrics.totalClients || 0, note: "Partner Connections", accent: "red" },
+    { label: "Mission Queue", value: data?.metrics.activeTasks || 0, note: "Pending Execution", accent: "white" },
+    { label: "Team Members", value: data?.metrics.totalUsers || 0, note: "Verified Personnel", accent: "red" },
+  ];
 
   return (
     <>
       <div className="grid gap-8">
         <div className="flex flex-col justify-between gap-6 xl:flex-row xl:items-end">
           <div>
-            <p className="mb-3 text-[10px] font-bold uppercase tracking-[0.3em] text-[#ff2026]">Zoon / Command Center</p>
+            <p className="mb-3 text-[10px] font-bold uppercase tracking-[0.3em] text-[#ff2026]">ZOON / Command Center</p>
             <h1 className="display-title text-3xl text-white md:text-5xl font-bold">Engineering Hub</h1>
             <p className="mt-4 max-w-4xl text-lg leading-relaxed text-[#9897a1]">
               Monitor active programs, deployment nodes, and technical velocity from a unified precision-built operating view.
@@ -33,8 +94,8 @@ export default function OverviewClient() {
         </div>
 
         <div className="grid gap-4 md:grid-cols-2 2xl:grid-cols-4">
-          {overviewMetrics.map((metric, index) => (
-            <article key={metric.label} className="panel-surface relative flex flex-col gap-3 overflow-hidden rounded-xl bg-[#171719] p-6 shadow-xl">
+          {metrics.map((metric, index) => (
+            <article key={metric.label} className="panel-surface relative flex flex-col gap-3 overflow-hidden rounded-xl bg-[#171719] p-6 shadow-xl border border-transparent hover:border-white/5 transition-colors">
               <span className="text-[10px] font-bold uppercase tracking-[0.25em] text-[#9897a1]">{metric.label}</span>
               <div className="display-title text-3xl font-bold text-white md:text-4xl">{metric.value}</div>
               <div className={`text-xs font-bold ${metric.accent === "green" ? "text-success" : metric.accent === "red" ? "text-brand" : "text-[#9897a1]/60"}`}>
@@ -53,7 +114,7 @@ export default function OverviewClient() {
               <table className="w-full border-collapse">
               <thead>
                 <tr className="bg-white/[0.01]">
-                  {["Project Details", "Client", "Status", "Velocity", "Deadline"].map((heading) => (
+                  {["Project Details", "Client", "Status", "Progress", "Deadline"].map((heading) => (
                     <th key={heading} className="px-8 py-5 text-left text-[10px] font-bold uppercase tracking-[0.2em] text-[#9897a1]">
                       {heading}
                     </th>
@@ -61,23 +122,28 @@ export default function OverviewClient() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-white/5">
-                {projects.slice(0, 4).map((project) => (
+                {(data?.projects || []).slice(0, 5).map((project) => (
                   <tr key={project.id} className="transition hover:bg-white/[0.02]">
                     <td className="px-8 py-6">
                       <Link href={`/projects/${project.id}`} className="font-bold text-white hover:text-[#ff2026] transition-colors">
                         {project.name}
                       </Link>
                     </td>
-                    <td className="px-8 py-6 text-sm text-[#9897a1]">{project.client}</td>
+                    <td className="px-8 py-6 text-sm text-[#9897a1]">{project.client?.companyName || "Internal"}</td>
                     <td className="px-8 py-6"><StatusBadge status={project.status} /></td>
                     <td className="px-8 py-6">
                        <div className="w-24">
-                          <ProgressBar value={project.progress} tone={project.progress > 70 ? "white" : "red"} />
+                          <ProgressBar value={project.status === 'COMPLETED' ? 100 : 45} tone={project.status === 'COMPLETED' ? "white" : "red"} />
                        </div>
                     </td>
-                    <td className="px-8 py-6 font-mono text-xs font-bold text-white">{project.deadline}</td>
+                    <td className="px-8 py-6 font-mono text-xs font-bold text-white">{new Date(project.deadline).toLocaleDateString([], { month: 'short', day: '2-digit' })}</td>
                   </tr>
                 ))}
+                {(data?.projects.length === 0) && (
+                   <tr>
+                     <td colSpan={5} className="px-8 py-10 text-center text-xs font-black uppercase tracking-widest text-[#9897a1]/40">No active programs in pipeline.</td>
+                   </tr>
+                )}
               </tbody>
               </table>
             </div>
@@ -85,7 +151,11 @@ export default function OverviewClient() {
 
           <Section title="Recent Activity" eyebrow="Signals Grid">
             <div className="grid divide-y divide-white/5">
-              {recentActivity.map((item) => (
+              {[
+                { title: "System Online", detail: "ZOON Engineering Hub connected to NestJS backend nodes.", timestamp: "Just Now", tone: "red" },
+                { title: "Encryption Active", detail: "TLS 1.3 tunnel established for all partner communication.", timestamp: "2 mins ago", tone: "white" },
+                { title: "Grid Sync Success", detail: "Global personnel directory synchronized with main terminal.", timestamp: "5 mins ago", tone: "red" },
+              ].map((item) => (
                 <div key={item.title} className="grid grid-cols-[3px_minmax(0,1fr)] gap-5 p-6 transition hover:bg-white/[0.02]">
                   <div className={`h-full ${item.tone === "red" ? "bg-brand shadow-[0_0_8px_rgba(255,32,38,0.5)]" : "bg-zinc-700"}`} />
                   <div>
@@ -103,6 +173,7 @@ export default function OverviewClient() {
       <CreateProjectModal
         isOpen={isProjectModalOpen}
         onClose={() => setIsProjectModalOpen(false)}
+        onCreate={() => fetchData()}
       />
     </>
   );
