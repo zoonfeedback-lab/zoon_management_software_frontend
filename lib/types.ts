@@ -1,7 +1,7 @@
 export type NavItem = {
   href: string;
   label: string;
-  icon: "grid" | "folder" | "wallet" | "review" | "task" | "file" | "clock" | "settings";
+  icon: "grid" | "folder" | "wallet" | "review" | "task" | "file" | "clock" | "settings" | "users" | "box" | "list";
 };
 
 export type Metric = {

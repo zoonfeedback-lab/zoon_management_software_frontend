@@ -1,10 +1,57 @@
 import { Invoice, Metric, NavItem, Project, Review } from "@/lib/types";
 
 export const primaryNav: NavItem[] = [
-  { href: "/overview", label: "Overview", icon: "grid" },
-  { href: "/projects", label: "Projects", icon: "folder" },
-  { href: "/payments", label: "Payments", icon: "wallet" },
-  { href: "/reviews", label: "Reviews", icon: "review" },
+  { href: "/overview", label: "Dashboard", icon: "grid" },
+  { href: "/clients", label: "Clients", icon: "users" },
+  { href: "/inventory", label: "Inventory", icon: "box" },
+  { href: "/logs", label: "Logs", icon: "list" },
+  { href: "/settings", label: "Settings", icon: "settings" },
+];
+
+export interface Client {
+  id: string;
+  name: string;
+  contact: string;
+  activeProjects: number;
+  totalRevenue: string;
+  status: "ACTIVE" | "INACTIVE";
+  logo?: string;
+  contactImage?: string;
+}
+
+export const mockClients: Client[] = [
+  {
+    id: "1",
+    name: "BioTech Corp",
+    contact: "Dr. Sarah Jenkins",
+    activeProjects: 8,
+    totalRevenue: "$482,500",
+    status: "ACTIVE",
+  },
+  {
+    id: "2",
+    name: "Nexus Health",
+    contact: "Marcus Thorne",
+    activeProjects: 3,
+    totalRevenue: "$124,900",
+    status: "ACTIVE",
+  },
+  {
+    id: "3",
+    name: "Starlight Systems",
+    contact: "Elena Vance",
+    activeProjects: 12,
+    totalRevenue: "$2,105,000",
+    status: "INACTIVE",
+  },
+  {
+    id: "4",
+    name: "Cyberdyne Tech",
+    contact: "Miles Dyson",
+    activeProjects: 5,
+    totalRevenue: "$850,200",
+    status: "ACTIVE",
+  },
 ];
 
 export const overviewMetrics: Metric[] = [
