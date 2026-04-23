@@ -62,7 +62,7 @@ export function Sidebar({
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M6 3v3m12-3v3M10 3v18M14 3v18M6 21h12M6 8h12"/></svg>
           </div>
           <div>
-            <div className="text-sm font-bold tracking-tight text-white">Zoon Labs</div>
+            <div className="text-lg font-black tracking-tighter text-white">ZOON</div>
             <div className="text-[9px] font-medium uppercase tracking-[0.2em] text-[#9897a1]">Admin Portal</div>
           </div>
         </div>

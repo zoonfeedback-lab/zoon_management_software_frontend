@@ -110,7 +110,7 @@ export default function CreateUserPage() {
                 value={formData.email}
                 onChange={e => setFormData({ ...formData, email: e.target.value })}
                 className="rounded-lg border border-white/5 bg-[#0b0b0d] px-4 py-3 text-sm text-white focus:border-[#ff2026]/30 focus:ring-1 focus:ring-[#ff2026]/20 outline-none"
-                placeholder="john@zoonlabs.int"
+                placeholder="john@zoon.int"
               />
             </div>
           </div>
