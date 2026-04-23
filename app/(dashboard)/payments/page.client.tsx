@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import React, { useState } from "react";
 import { BarChart, PrimaryButton, Section, StatusBadge } from "@/components/ui";
 import { CreateInvoiceModal, SearchFilterModal, ExportModal } from "@/components/modals";
 import { invoices as initialInvoices, paymentMetrics } from "@/lib/data";
@@ -104,7 +104,7 @@ export default function PaymentsClient() {
                           idx === 0 ? "bg-brand" : idx === 1 ? "bg-white" : "bg-zinc-600"
                         }`}
                         data-width
-                        style={{ \"--dynamic-width\": `${item.percentage}%` } as any}
+                        style={{ "--dynamic-width": `${item.percentage}%` } as any}
                       />
                     </div>
                   </div>

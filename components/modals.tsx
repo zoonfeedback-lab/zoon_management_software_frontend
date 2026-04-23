@@ -1,6 +1,6 @@
 "use client";
 
-import { ReactNode, useState } from "react";
+import React, { ReactNode, useState } from "react";
 
 type ModalProps = {
   isOpen: boolean;
@@ -176,6 +176,7 @@ export function CreateProjectModal({
 export function CreateInvoiceModal({
   isOpen,
   onClose,
+  onCreate,
 }: {
   isOpen: boolean;
   onClose: () => void;
@@ -345,11 +346,11 @@ export function EditProjectModal({
         </div>
 
         <div className="grid gap-2">
-          <label htmlFor=\"edit-progress\" className=\"text-sm font-semibold text-white\">Progress (%)</label>
+          <label htmlFor="edit-progress" className="text-sm font-semibold text-white">Progress (%)</label>
           <input
-            id=\"edit-progress\"
-            type=\"number\"
-            title=\"Project progress percentage\"
+            id="edit-progress"
+            type="number"
+            title="Project progress percentage"
             min="0"
             max="100"
             className="bg-black/50 border border-line text-white px-3 py-2 rounded-sm focus:border-brand focus:outline-none transition-colors"
