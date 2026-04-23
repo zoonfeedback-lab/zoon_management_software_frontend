@@ -716,3 +716,176 @@ export function ExportModal({
     </Modal>
   );
 }
+export function CreateTaskModal({
+  isOpen,
+  onClose,
+  onCreate,
+}: {
+  isOpen: boolean;
+  onClose: () => void;
+  onCreate?: (task: any) => void;
+}) {
+  const [loading, setLoading] = useState(false);
+  const [projects, setProjects] = useState<any[]>([]);
+  const [users, setUsers] = useState<any[]>([]);
+  const [formData, setFormData] = useState({
+    title: "",
+    description: "",
+    projectId: "",
+    assignedToId: "",
+    priority: "MEDIUM",
+    dueDate: "",
+  });
+
+  React.useEffect(() => {
+    if (isOpen) {
+      const fetchData = async () => {
+        try {
+          const token = localStorage.getItem("access_token");
+          const headers = { Authorization: `Bearer ${token}` };
+          const [pRes, uRes] = await Promise.all([
+            fetch("/api/projects", { headers }),
+            fetch("/api/users", { headers }),
+          ]);
+          if (pRes.ok && uRes.ok) {
+            setProjects(await pRes.json());
+            setUsers(await uRes.json());
+          }
+        } catch (err) {
+          console.error("Failed to fetch task form data:", err);
+        }
+      };
+      fetchData();
+    }
+  }, [isOpen]);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    try {
+      const token = localStorage.getItem("access_token");
+      const res = await fetch("/api/tasks", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(formData),
+      });
+      if (res.ok) {
+        const newTask = await res.json();
+        if (onCreate) onCreate(newTask);
+        onClose();
+        setFormData({
+          title: "",
+          description: "",
+          projectId: "",
+          assignedToId: "",
+          priority: "MEDIUM",
+          dueDate: "",
+        });
+      }
+    } catch (err) {
+      console.error("Task creation failed:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <Modal isOpen={isOpen} onClose={onClose} title="Initialize Task" size="md">
+      <form onSubmit={handleSubmit} className="grid gap-5">
+        <div className="grid gap-2">
+          <label className="text-xs font-black uppercase tracking-widest text-[#9897a1]">Task Title</label>
+          <input
+            required
+            type="text"
+            className="bg-[#0b0b0d] border border-white/10 text-white px-4 py-3 rounded-lg focus:border-brand/30 outline-none"
+            placeholder="e.g., Integrate Auth Middleware"
+            value={formData.title}
+            onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+          />
+        </div>
+
+        <div className="grid md:grid-cols-2 gap-4">
+          <div className="grid gap-2">
+            <label className="text-xs font-black uppercase tracking-widest text-[#9897a1]">Project</label>
+            <select
+              required
+              className="bg-[#0b0b0d] border border-white/10 text-white px-4 py-3 rounded-lg focus:border-brand/30 outline-none"
+              value={formData.projectId}
+              onChange={(e) => setFormData({ ...formData, projectId: e.target.value })}
+            >
+              <option value="">Select Project</option>
+              {projects.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
+            </select>
+          </div>
+          <div className="grid gap-2">
+            <label className="text-xs font-black uppercase tracking-widest text-[#9897a1]">Assignee</label>
+            <select
+              className="bg-[#0b0b0d] border border-white/10 text-white px-4 py-3 rounded-lg focus:border-brand/30 outline-none"
+              value={formData.assignedToId}
+              onChange={(e) => setFormData({ ...formData, assignedToId: e.target.value })}
+            >
+              <option value="">Unassigned</option>
+              {users.map(u => <option key={u.id} value={u.id}>{u.fullName}</option>)}
+            </select>
+          </div>
+        </div>
+
+        <div className="grid md:grid-cols-2 gap-4">
+          <div className="grid gap-2">
+            <label className="text-xs font-black uppercase tracking-widest text-[#9897a1]">Priority</label>
+            <select
+              className="bg-[#0b0b0d] border border-white/10 text-white px-4 py-3 rounded-lg focus:border-brand/30 outline-none"
+              value={formData.priority}
+              onChange={(e) => setFormData({ ...formData, priority: e.target.value })}
+            >
+              <option value="LOW">LOW</option>
+              <option value="MEDIUM">MEDIUM</option>
+              <option value="HIGH">HIGH</option>
+              <option value="CRITICAL">CRITICAL</option>
+            </select>
+          </div>
+          <div className="grid gap-2">
+            <label className="text-xs font-black uppercase tracking-widest text-[#9897a1]">Due Date</label>
+            <input
+              type="date"
+              className="bg-[#0b0b0d] border border-white/10 text-white px-4 py-3 rounded-lg focus:border-brand/30 outline-none"
+              value={formData.dueDate}
+              onChange={(e) => setFormData({ ...formData, dueDate: e.target.value })}
+            />
+          </div>
+        </div>
+
+        <div className="grid gap-2">
+          <label className="text-xs font-black uppercase tracking-widest text-[#9897a1]">Description</label>
+          <textarea
+            rows={3}
+            className="bg-[#0b0b0d] border border-white/10 text-white px-4 py-3 rounded-lg focus:border-brand/30 outline-none resize-none"
+            placeholder="Mission parameters..."
+            value={formData.description}
+            onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+          />
+        </div>
+
+        <div className="flex gap-4 pt-4 border-t border-white/5">
+          <button
+            type="button"
+            onClick={onClose}
+            className="flex-1 px-4 py-3.5 border border-white/10 text-[#9897a1] font-bold uppercase tracking-widest text-[10px] hover:bg-white/5 transition-colors rounded-lg"
+          >
+            Cancel
+          </button>
+          <button
+            disabled={loading}
+            type="submit"
+            className="flex-1 px-4 py-3.5 bg-brand text-white font-bold uppercase tracking-widest text-[10px] hover:bg-[#ff343a] transition-colors rounded-lg shadow-[0_4px_14px_rgba(255,32,38,0.3)] disabled:opacity-50"
+          >
+            {loading ? "Allocating..." : "Assign Mission"}
+          </button>
+        </div>
+      </form>
+    </Modal>
+  );
+}
