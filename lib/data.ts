@@ -5,9 +5,6 @@ export const primaryNav: NavItem[] = [
   { href: "/projects", label: "Projects", icon: "folder" },
   { href: "/payments", label: "Payments", icon: "wallet" },
   { href: "/clients", label: "Clients", icon: "users" },
-  { href: "/inventory", label: "Inventory", icon: "box" },
-  { href: "/logs", label: "Logs", icon: "list" },
-  { href: "/settings", label: "Settings", icon: "settings" },
 ];
 
 export interface Client {
