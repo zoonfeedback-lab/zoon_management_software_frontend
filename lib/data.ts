@@ -56,6 +56,11 @@ export const projects: Project[] = [
       { name: "legacy_engine_source_dump.zip", meta: "Uploaded by Mike T. 1 week ago", size: "42.1 MB", kind: "ZIP" },
       { name: "Q3_Stakeholder_Brief.docx", meta: "Uploaded by System 3 weeks ago", size: "850 KB", kind: "DOC" },
     ],
+    media: [
+      { id: "1", label: "Arch_v2.png", src: "https://lh3.googleusercontent.com/aida-public/AB6AXuB4EKIqoHmyBHrjOO8B2c28MvxBhcAAXbHsQr6F9vFixDg7R-9vCIjeO-QwawpZSgON8LnJWMydW0ujUudGrL5JIVB-xyXkZpAPLTmfnxnptRr1DEAqlPe8wYFBnvIok-XSmIZFVMNbFLAYFLoKmUhLa8W6_Nb8CgZ38raGgHCpFqfGTRRxNhUF6Ly3GTBpBnRQvj45MFHz8l4NC8tvVhlhersyF07L0_AfjV-JGcH56ACHLdMLhH-f04ayRBUUUo-PDMXzb7XNS2o", type: "image" },
+      { id: "2", label: "core_loop.rs", src: "https://lh3.googleusercontent.com/aida-public/AB6AXuBn2deWznNGsGE5Bm2N9htwk4Mrb-kf985aa8xU3UtjQX9xaYWV_ameSaEz3wc2J9jTG1oC8tBbZ_Qkr2uWnY7dl7wLq3TLobP2FR4g0Y90v_vUyay4XgsUdgrQwWx_Py9jba4WajD9u5T8TjWFGLnPGlGv6HDvcr22ani9nQV6rfU1ypGUuTay2X21fmKUa6SGh1mOrQ_U65DnzT37xCP5SJef1tDU8teO6AOwj_eFgrWaqi7j9IWbr0aOvznUVwcgqx0EuWjMmRA", type: "image" },
+      { id: "3", label: "network_top.jpg", src: "https://lh3.googleusercontent.com/aida-public/AB6AXuBtP_6p2jITQg3wmyrI_ZpAvsNYut3fv1wGxiN55kusvVAvWwIh63Z3NpoLzTJ2OHIj8aArOpp2LLn6eS6kOJRfh7gF8EL9CKZLZ0oPRTP9A0jqwg_QH25VZLt4jXiKmggf7J4sCt9L93z1fRmu9sAkpNzlT9a-Od-qPQu20n_grldSJdMRtudQcuhQLpMAA-B6ffTkWiprmqBiAgpQbZwVg-3Ozw7iVZbaOGouuH45amzAabP-IzRx6wezf9PgdNzJxnSpq9R4LSQ", type: "image" },
+    ],
     activity: [
       { action: "Component Library Update", user: "Marcus V.", status: "feat: navigation-v2", timestamp: "2 hours ago" },
       { action: "Product Detail Prototype", user: "Elena S.", status: "v1.2 approved", timestamp: "Yesterday, 4:45 PM" },
