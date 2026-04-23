@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { BarChart, PrimaryButton, Section, StatusBadge } from "@/components/ui";
+import { BarChart, Section, StatusBadge } from "@/components/ui";
 import { CreateInvoiceModal, SearchFilterModal, ExportModal } from "@/components/modals";
 import { invoices as initialInvoices, paymentMetrics } from "@/lib/data";
 
@@ -22,9 +22,9 @@ export default function PaymentsClient() {
   ];
 
   const distributionData = [
-    { method: "Direct Deposit", percentage: 72 },
-    { method: "Crypto (USDC)", percentage: 18 },
-    { method: "Wire Transfer", percentage: 10 },
+    { method: "Direct Deposit", percentage: 72, color: "bg-[#ff2026]" },
+    { method: "Crypto (USDC)", percentage: 18, color: "bg-white" },
+    { method: "Wire Transfer", percentage: 10, color: "bg-zinc-600" },
   ];
 
   const filteredInvoices = invoices.filter(
@@ -33,7 +33,7 @@ export default function PaymentsClient() {
       invoice.id.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  const handleCreateInvoice = (invoice: { id: string; project: string; amount: string; dueDate: string; status: string }) => {
+  const handleCreateInvoice = (invoice: { id: string; project: string; amount: string; dueDate: string; status: "Paid" | "Pending" | "Overdue" }) => {
     setInvoices((prev) => [invoice, ...prev]);
   };
 
@@ -43,68 +43,72 @@ export default function PaymentsClient() {
 
   return (
     <>
-      <div className="grid gap-6">
-        <div className="flex flex-col justify-between gap-5 xl:flex-row xl:items-end">
+      <div className="grid gap-8">
+        {/* Header */}
+        <div className="flex flex-col justify-between gap-6 xl:flex-row xl:items-end">
           <div>
-            <p className="mb-3 text-xs font-semibold uppercase tracking-[0.28em] text-brand">zoon / Revenue Ops</p>
-            <h1 className="display-title text-4xl text-white md:text-5xl">Payments &amp; Invoicing</h1>
-            <p className="mt-4 max-w-4xl text-base leading-7 text-mute md:text-lg">
-              Manage project revenue and engineering contracts.
+            <p className="mb-3 text-[10px] font-bold uppercase tracking-[0.3em] text-[#ff2026]">Finance / Revenue Ops</p>
+            <h1 className="display-title text-4xl text-white md:text-5xl font-bold">Payments & Invoicing</h1>
+            <p className="mt-4 max-w-4xl text-lg leading-relaxed text-[#9897a1]">
+              Manage multi-currency revenue streams, engineering contracts, and automated invoicing cycles.
             </p>
           </div>
-          <div className="flex flex-wrap gap-3">
+          <div className="flex flex-wrap gap-4">
+             <button
+              onClick={() => setIsExportModalOpen(true)}
+              className="flex items-center justify-center gap-3 border border-white/10 bg-white/[0.03] px-6 py-3.5 text-sm font-bold uppercase tracking-wider text-white transition hover:bg-white/[0.08] rounded-lg"
+            >
+              Export Reports
+            </button>
             <button
               onClick={() => setIsInvoiceModalOpen(true)}
-              className="inline-flex items-center justify-center gap-2 bg-brand px-4 py-2.5 text-xs font-bold uppercase tracking-[0.16em] text-white transition hover:bg-[#ff343a] md:px-5 md:py-3 md:text-sm"
+              className="inline-flex items-center justify-center gap-3 bg-[#ff2026] px-6 py-3.5 text-sm font-bold uppercase tracking-wider text-white transition hover:bg-[#ff343a] rounded-lg shadow-[0_4px_14px_rgba(255,32,38,0.3)]"
             >
-              Create New Invoice
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              Generate Invoice
             </button>
           </div>
         </div>
 
-        <div className="grid gap-4 xl:grid-cols-3">
+        {/* Metrics */}
+        <div className="grid gap-4 md:grid-cols-3">
           {paymentMetrics.map((metric, index) => (
-            <article key={metric.label} className="panel-surface grid gap-4 p-6 relative overflow-hidden">
-              {metric.accent === "red" && (
-                <div className="absolute top-0 right-0 w-1 h-full bg-brand"></div>
-              )}
-              <div className="flex justify-between items-start">
-                <span className="text-xs font-semibold uppercase tracking-[0.22em] text-mute">{metric.label}</span>
-                <span className={`text-2xl ${index === 2 ? "text-brand" : "text-zinc-600"}`}>
-                  {index === 0 ? "📋" : index === 1 ? "✓" : "⚠️"}
-                </span>
+            <article key={metric.label} className="panel-surface relative flex flex-col gap-4 overflow-hidden rounded-xl bg-[#171719] p-7 shadow-xl">
+              <div className="flex items-center justify-between">
+                 <span className="text-[10px] font-bold uppercase tracking-[0.25em] text-[#9897a1]">{metric.label}</span>
+                 <div className={`h-2 w-2 rounded-full ${metric.accent === 'green' ? 'bg-success' : metric.accent === 'red' ? 'bg-brand' : 'bg-white'}`} />
               </div>
-              <div className="display-title text-3xl md:text-4xl text-white">{metric.value}</div>
-              <div className={metric.accent === "green" ? "text-success" : metric.accent === "red" ? "text-brand" : "text-mute text-sm"}>
+              <div className="display-title text-3xl font-bold text-white md:text-4xl">{metric.value}</div>
+              <div className={`text-xs font-bold ${metric.accent === "green" ? "text-success" : metric.accent === "red" ? "text-brand" : "text-[#9897a1]/60"}`}>
                 {metric.note}
+              </div>
+              <div className="absolute bottom-0 left-0 h-0.5 w-full bg-white/5">
+                 <div className={`h-full ${metric.accent === 'green' ? 'bg-success' : metric.accent === 'red' ? 'bg-brand' : 'bg-white/20'}`} style={{ width: index === 0 ? '75%' : index === 1 ? '90%' : '15%' }} />
               </div>
             </article>
           ))}
         </div>
 
-        <div className="grid gap-4 xl:grid-cols-[minmax(0,2fr)_1fr]">
-          <Section title="Revenue Overview" eyebrow="6 Month Window">
-            <div className="p-6 md:p-7">
+        <div className="grid gap-6 xl:grid-cols-[1fr_360px]">
+          <Section title="Revenue Forecast" eyebrow="6 Month Trajectory">
+            <div className="p-8">
               <BarChart data={chartData} />
             </div>
           </Section>
 
-          <div className="grid gap-4 auto-rows-max">
-            <Section title="Payment Distribution" eyebrow="Collection Split">
-              <div className="space-y-4 p-6 md:p-7">
-                {distributionData.map((item, idx) => (
-                  <div key={item.method}>
-                    <div className="flex justify-between items-center mb-2">
-                      <span className="text-xs font-semibold text-zinc-400 uppercase">{item.method}</span>
-                      <span className="text-xs font-bold text-white">{item.percentage}%</span>
+          <div className="grid gap-6">
+            <Section title="Asset Distribution" eyebrow="Payment Rails">
+              <div className="grid gap-6 p-8">
+                {distributionData.map((item) => (
+                  <div key={item.method} className="grid gap-3">
+                    <div className="flex justify-between items-center">
+                      <span className="text-[10px] font-bold uppercase tracking-wider text-[#9897a1]">{item.method}</span>
+                      <span className="font-mono text-xs font-bold text-white">{item.percentage}%</span>
                     </div>
-                    <div className="h-1.5 w-full bg-zinc-800 rounded-sm overflow-hidden">
+                    <div className="h-1.5 w-full bg-white/5 rounded-full overflow-hidden">
                       <div
-                        className={`h-full rounded-sm ${
-                          idx === 0 ? "bg-brand" : idx === 1 ? "bg-white" : "bg-zinc-600"
-                        }`}
-                        data-width
-                        style={{ "--dynamic-width": `${item.percentage}%` } as any}
+                        className={`h-full rounded-full transition-all duration-1000 ${item.color}`}
+                        style={{ width: `${item.percentage}%` }}
                       />
                     </div>
                   </div>
@@ -112,83 +116,65 @@ export default function PaymentsClient() {
               </div>
             </Section>
 
-            <button
-              onClick={() => setIsExportModalOpen(true)}
-              className="bg-brand p-6 md:p-7 text-white relative overflow-hidden group cursor-pointer hover:opacity-90 transition-opacity border-0"
-            >
-              <div className="relative z-10">
-                <h4 className="font-bold text-lg mb-1">Quick Export</h4>
-                <p className="text-white/70 text-sm">Generate tax-ready financial reports for Q2.</p>
-              </div>
-              <div className="absolute -right-8 -bottom-8 opacity-5 group-hover:opacity-10 transition-opacity">
-                <span className="text-9xl">📊</span>
-              </div>
-            </button>
+            <div className="panel-surface relative overflow-hidden rounded-xl bg-gradient-to-br from-[#ff2026] to-[#b91c1c] p-8 text-white shadow-2xl">
+               <div className="relative z-10">
+                  <h4 className="text-xl font-bold">Tax Compliance</h4>
+                  <p className="mt-2 text-sm text-white/80 leading-relaxed">Automatic generation of regional tax reports and VAT compliance for Q3 is now active.</p>
+                  <button className="mt-6 text-[10px] font-black uppercase tracking-widest bg-white text-brand px-4 py-2 rounded">Check Status</button>
+               </div>
+               <svg className="absolute -right-4 -bottom-4 h-32 w-32 text-white/10" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+            </div>
           </div>
         </div>
 
-        <Section title="Recent Invoices" eyebrow="Billing Table">
-          <div className="border-b border-line p-4 md:p-6 flex flex-col md:flex-row gap-4 justify-between items-start md:items-center bg-zinc-900/30">
-            <div className="relative flex-1 max-w-md w-full">
-              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500 text-sm">🔍</span>
+        {/* Invoices Table */}
+        <Section title="Billing Registry" eyebrow="Recent Invoices">
+          <div className="flex flex-col gap-4 border-b border-white/5 bg-white/[0.01] p-6 md:flex-row md:items-center md:justify-between">
+            <div className="relative w-full max-w-md">
+              <svg className="absolute left-4 top-1/2 -translate-y-1/2 text-[#9897a1]/40" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
               <input
                 type="text"
-                placeholder="Search invoices..."
+                placeholder="Filter by ID or Project..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full bg-black/50 border border-line text-white text-sm px-9 py-2 rounded-sm focus:border-brand focus:outline-none focus:ring-1 focus:ring-brand/50 placeholder:text-zinc-500 transition-colors"
+                className="w-full rounded-lg border border-white/10 bg-[#0b0b0d] py-3 pl-12 pr-4 text-sm text-white transition-all focus:border-[#ff2026]/30 focus:ring-1 focus:ring-[#ff2026]/20"
               />
             </div>
             <button
               onClick={() => setIsFilterModalOpen(true)}
-              className="bg-zinc-800 hover:bg-zinc-700 border border-line px-4 py-2 flex items-center gap-2 text-xs font-bold uppercase tracking-wider transition-colors whitespace-nowrap rounded-sm"
+              className="flex items-center gap-2 rounded-lg border border-white/10 bg-white/[0.03] px-5 py-3 text-xs font-bold uppercase tracking-wider text-[#9897a1] transition hover:bg-white/[0.08] hover:text-white"
             >
-              <span>⚙️</span>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M22 3H2l8 9.46V19l4 2v-8.54L22 3z"/></svg>
               Filters
             </button>
           </div>
 
           <div className="overflow-x-auto">
-            <table className="w-full text-left">
+            <table className="w-full border-collapse">
               <thead>
-                <tr className="border-b border-line bg-black/30">
-                  {[
-                    "Invoice ID",
-                    "Project Name",
-                    "Amount",
-                    "Due Date",
-                    "Status",
-                    "",
-                  ].map((heading) => (
-                    <th
-                      key={heading}
-                      className="px-6 py-4 text-xs font-bold uppercase tracking-[0.22em] text-mute"
-                    >
+                <tr className="bg-white/[0.01]">
+                  {["Invoice ID", "Project / Engagement", "Amount", "Due Date", "Status", ""].map((heading) => (
+                    <th key={heading} className="px-8 py-5 text-left text-[10px] font-bold uppercase tracking-[0.2em] text-[#9897a1]">
                       {heading}
                     </th>
                   ))}
                 </tr>
               </thead>
-              <tbody className="divide-y divide-line">
-                {filteredInvoices.map((invoice, index) => (
-                  <tr
-                    key={invoice.id}
-                    className={`transition hover:bg-white/[0.03] ${
-                      index % 2 === 1 ? "bg-black/20" : ""
-                    }`}
-                  >
-                    <td className="px-6 py-4 text-sm font-mono text-zinc-400">{invoice.id}</td>
-                    <td className="px-6 py-4 text-sm font-semibold text-white">
-                      {invoice.project}
+              <tbody className="divide-y divide-white/5">
+                {filteredInvoices.map((invoice) => (
+                  <tr key={invoice.id} className="transition hover:bg-white/[0.02]">
+                    <td className="px-8 py-6 font-mono text-xs font-bold text-[#ff2026]/80">{invoice.id}</td>
+                    <td className="px-8 py-6">
+                      <div className="font-bold text-white">{invoice.project}</div>
                     </td>
-                    <td className="px-6 py-4 text-sm text-white">{invoice.amount}</td>
-                    <td className="px-6 py-4 text-sm text-zinc-400">{invoice.dueDate}</td>
-                    <td className="px-6 py-4">
+                    <td className="px-8 py-6 font-mono text-sm font-bold text-white">{invoice.amount}</td>
+                    <td className="px-8 py-6 text-sm text-[#9897a1]">{invoice.dueDate}</td>
+                    <td className="px-8 py-6">
                       <StatusBadge status={invoice.status} />
                     </td>
-                    <td className="px-6 py-4 text-right">
-                      <button className="text-zinc-500 hover:text-white transition-colors">
-                        ⋮
+                    <td className="px-8 py-6 text-right">
+                      <button className="text-[#9897a1] transition hover:text-white">
+                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="1"/><circle cx="12" cy="5" r="1"/><circle cx="12" cy="19" r="1"/></svg>
                       </button>
                     </td>
                   </tr>
@@ -197,15 +183,13 @@ export default function PaymentsClient() {
             </table>
           </div>
 
-          <div className="border-t border-line px-6 py-4 flex justify-between items-center text-xs text-zinc-500 font-bold uppercase tracking-wider">
-            <span>Showing {filteredInvoices.length} of {invoices.length} Invoices</span>
+          <div className="flex items-center justify-between border-t border-white/5 bg-white/[0.01] px-8 py-5">
+            <span className="text-[10px] font-bold uppercase tracking-widest text-[#9897a1]/40">
+              Audit log synchronized • Total Invoices: {invoices.length}
+            </span>
             <div className="flex gap-4">
-              <button className="hover:text-white flex items-center gap-1 transition-colors">
-                ← Previous
-              </button>
-              <button className="hover:text-white flex items-center gap-1 transition-colors">
-                Next →
-              </button>
+              <button className="text-[10px] font-black uppercase tracking-widest text-[#9897a1] hover:text-white">Previous</button>
+              <button className="text-[10px] font-black uppercase tracking-widest text-[#ff2026]">Next</button>
             </div>
           </div>
         </Section>

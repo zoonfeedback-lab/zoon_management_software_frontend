@@ -1,14 +1,61 @@
-import Link from "next/link";
-import { GhostButton, PrimaryButton, ProgressBar, Section, StatusBadge } from "@/components/ui";
-import { projects } from "@/lib/data";
+"use client";
 
-export default function ProjectsPage() {
+import { useEffect, useState } from "react";
+import Link from "next/link";
+import { GhostButton, ProgressBar, Section, StatusBadge } from "@/components/ui";
+
+interface Project {
+  id: string;
+  name: string;
+  description: string;
+  status: string;
+  deadline: string;
+  client: {
+    companyName: string;
+  };
+}
+
+export default function ProjectsClient() {
+  const [projects, setProjects] = useState<Project[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    const fetchProjects = async () => {
+      try {
+        const token = localStorage.getItem("access_token");
+        const response = await fetch("/api/projects", {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        if (!response.ok) {
+          throw new Error("Failed to fetch projects");
+        }
+
+        const data = await response.json();
+        setProjects(data);
+      } catch (err: any) {
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchProjects();
+  }, []);
+
   const stats = [
-    { label: "Active Nodes", value: "24", change: "+4", color: "text-brand" },
+    { label: "Active Nodes", value: projects.filter(p => p.status === 'ACTIVE').length.toString(), change: "+4", color: "text-brand" },
     { label: "Completion Rate", value: "88%", change: "+2%", color: "text-success" },
     { label: "Average Velocity", value: "42pts", change: "Stable", color: "text-white" },
-    { label: "QA Pipeline", value: "8", change: "-2", color: "text-brand" },
+    { label: "Total Projects", value: projects.length.toString(), change: "Live", color: "text-brand" },
   ];
+
+  if (loading) {
+    return <div className="flex h-[400px] items-center justify-center text-mute uppercase tracking-widest">Initialising Grid...</div>;
+  }
 
   return (
     <div className="grid gap-8">
@@ -33,6 +80,12 @@ export default function ProjectsPage() {
         </div>
       </div>
 
+      {error && (
+        <div className="bg-brand/10 border border-brand/20 p-4 rounded text-brand text-xs font-bold uppercase tracking-widest">
+          Error: {error}
+        </div>
+      )}
+
       {/* Stats Grid */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {stats.map((stat) => (
@@ -55,7 +108,7 @@ export default function ProjectsPage() {
           <table className="w-full border-collapse">
             <thead>
               <tr className="bg-white/[0.02]">
-                {["Code", "Project Details", "Client", "Status", "Budget", "Health / Velocity"].map((heading) => (
+                {["ID", "Project Details", "Client", "Status", "Deadline", "Health / Velocity"].map((heading) => (
                   <th key={heading} className="px-8 py-5 text-left text-[10px] font-bold uppercase tracking-[0.2em] text-[#9897a1]">
                     {heading}
                   </th>
@@ -66,7 +119,7 @@ export default function ProjectsPage() {
               {projects.map((project) => (
                 <tr key={project.id} className="transition hover:bg-white/[0.02]">
                   <td className="px-8 py-6">
-                    <span className="font-mono text-xs font-bold text-[#ff2026]/80">{project.code}</span>
+                    <span className="font-mono text-[10px] font-bold text-[#ff2026]/80">{project.id.substring(0, 8).toUpperCase()}</span>
                   </td>
                   <td className="px-8 py-6">
                     <div>
@@ -74,7 +127,7 @@ export default function ProjectsPage() {
                         {project.name}
                       </Link>
                       <div className="mt-1 flex items-center gap-3">
-                         <div className="text-[10px] uppercase tracking-widest text-[#9897a1]/60">{project.category}</div>
+                         <div className="text-[10px] uppercase tracking-widest text-[#9897a1]/60">Technical Deployment</div>
                          <div className="flex -space-x-1.5">
                             {[1,2,3].map(i => (
                               <div key={i} className="h-4 w-4 rounded-full bg-zinc-700 border border-[#171719]" />
@@ -84,25 +137,32 @@ export default function ProjectsPage() {
                     </div>
                   </td>
                   <td className="px-8 py-6">
-                    <div className="text-sm font-medium text-white/80">{project.client}</div>
+                    <div className="text-sm font-medium text-white/80">{project.client.companyName}</div>
                   </td>
                   <td className="px-8 py-6">
                     <StatusBadge status={project.status} />
                   </td>
-                  <td className="px-8 py-6 font-mono text-sm font-bold text-white">
-                    {project.budget}
+                  <td className="px-8 py-6 font-mono text-xs font-bold text-white">
+                    {project.deadline ? new Date(project.deadline).toLocaleDateString('en-US', { month: 'short', day: '2-digit' }) : 'N/A'}
                   </td>
                   <td className="px-8 py-6">
                     <div className="w-32">
-                       <ProgressBar value={project.progress} tone={project.progress > 80 ? "white" : "red"} />
+                       <ProgressBar value={project.status === 'COMPLETED' ? 100 : 45} tone={project.status === 'COMPLETED' ? "white" : "red"} />
                        <div className="mt-2 flex justify-between text-[9px] font-bold uppercase tracking-widest text-[#9897a1]">
-                          <span>{project.progress}%</span>
-                          <span>{project.deadline}</span>
+                          <span>{project.status === 'COMPLETED' ? '100%' : '45%'}</span>
+                          <span>Signal Stable</span>
                        </div>
                     </div>
                   </td>
                 </tr>
               ))}
+              {projects.length === 0 && (
+                <tr>
+                  <td colSpan={6} className="px-8 py-20 text-center text-[#9897a1] uppercase text-xs tracking-widest font-bold">
+                    No projects found in local grid.
+                  </td>
+                </tr>
+              )}
             </tbody>
           </table>
         </div>
@@ -110,7 +170,7 @@ export default function ProjectsPage() {
         {/* Footer controls */}
         <div className="flex items-center justify-between border-t border-white/5 bg-white/[0.01] px-8 py-4">
            <div className="text-[10px] font-bold uppercase tracking-widest text-[#9897a1]/40">
-              Page 1 of 4 • Active Deployment Grid
+              {projects.length} Nodes Synchronized • Active Deployment Grid
            </div>
            <div className="flex gap-2">
               <button className="h-8 w-8 rounded border border-white/5 bg-white/5 transition hover:bg-white/10 flex items-center justify-center">
