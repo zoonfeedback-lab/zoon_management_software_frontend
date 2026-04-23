@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
-import { GhostButton, PrimaryButton, ProgressBar, Section, StatusBadge } from "@/components/ui";
 import { projects } from "@/lib/data";
+import ProjectDetailClient from "./page.client";
 
 export default async function ProjectDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -10,28 +10,8 @@ export default async function ProjectDetailPage({ params }: { params: Promise<{ 
     notFound();
   }
 
-  return (
-    <div className="grid gap-6">
-      <div className="flex flex-wrap gap-6 border-b border-line pb-4 text-sm text-mute">
-        <span className="border-b-2 border-brand pb-3 font-semibold text-brand">Overview</span>
-        <span>Resources</span>
-        <span>Analytics</span>
-      </div>
-
-      <div className="flex flex-col justify-between gap-5 xl:flex-row xl:items-end">
-        <div>
-          <div className="flex flex-wrap items-center gap-3">
-            <span className="text-sm uppercase tracking-[0.18em] text-mute">{project.code}</span>
-            <StatusBadge status={project.status} />
-          </div>
-          <h1 className="display-title mt-4 text-4xl text-white md:text-6xl">{project.name}</h1>
-          <p className="mt-4 max-w-4xl text-base leading-7 text-mute md:text-lg">{project.summary}</p>
-        </div>
-        <div className="flex flex-wrap gap-3">
-          <GhostButton>Edit Project</GhostButton>
-          <PrimaryButton>Deploy</PrimaryButton>
-        </div>
-      </div>
+  return <ProjectDetailClient project={project} />;
+}
 
       <div className="grid gap-4 xl:grid-cols-[minmax(0,1.6fr)_340px]">
         <Section title="Project Description" eyebrow={project.category}>
@@ -57,15 +37,46 @@ export default async function ProjectDetailPage({ params }: { params: Promise<{ 
                 <h3 className="mt-3 text-3xl font-semibold text-white">{value}</h3>
               </div>
             ))}
-            <div className="px-6 py-5 md:px-7">
+            <div className="px-6 py-5 md:px-7 border-b border-line">
               <p className="text-sm uppercase tracking-[0.18em] text-mute">Completion</p>
               <div className="mt-4">
                 <ProgressBar value={project.progress} />
               </div>
             </div>
+            <div className="px-6 py-5 md:px-7">
+              <p className="text-sm uppercase tracking-[0.18em] text-mute mb-3">Team Members</p>
+              <div className="flex -space-x-2">
+                {project.team.map((member) => (
+                  <div
+                    key={member.id}
+                    className="h-8 w-8 rounded-full border-2 border-zinc-900 bg-gradient-to-br from-sky-900 to-sky-500 font-bold text-white text-xs flex items-center justify-center"
+                    title={member.name}
+                  >
+                    {member.initials}
+                  </div>
+                ))}
+                {project.team.length > 4 && (
+                  <div className="h-8 w-8 rounded-full border-2 border-zinc-900 bg-zinc-700 text-white text-xs flex items-center justify-center font-semibold">
+                    +{project.team.length - 3}
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
         </Section>
       </div>
+
+      {project.media && project.media.length > 0 && (
+        <Section title="Assets &amp; Media" eyebrow="Gallery" action="Upload Media" actionHref="#">
+          <div className="p-6 md:p-7">
+            <MediaGallery media={project.media} />
+          </div>
+        </Section>
+      )}
+
+      <Section title="Project Files" eyebrow="Asset Archive" action="Upload File" actionHref="#">
+        <FileList files={project.files} />
+      </Section>
 
       <div className="grid gap-4 xl:grid-cols-[minmax(0,1.6fr)_340px]">
         <Section title="Project Milestones" eyebrow="Execution Timeline">
@@ -128,25 +139,6 @@ export default async function ProjectDetailPage({ params }: { params: Promise<{ 
           </Section>
         </div>
       </div>
-
-      <Section title="Project Files" eyebrow="Asset Archive">
-        <div className="grid">
-          {project.files.map((file) => (
-            <div key={file.name} className="flex flex-col gap-4 border-b border-line px-6 py-5 last:border-b-0 md:flex-row md:items-center md:justify-between md:px-7">
-              <div className="flex items-center gap-4">
-                <span className="min-w-11 border border-line px-3 py-2 text-center text-xs font-semibold uppercase tracking-[0.18em] text-brand">
-                  {file.kind}
-                </span>
-                <div>
-                  <div className="text-lg text-white">{file.name}</div>
-                  <p className="text-mute">{file.meta}</p>
-                </div>
-              </div>
-              <div className="text-white">{file.size}</div>
-            </div>
-          ))}
-        </div>
-      </Section>
 
       <Section title="Project Activity Log" eyebrow="Delivery Events">
         <div className="overflow-x-auto">

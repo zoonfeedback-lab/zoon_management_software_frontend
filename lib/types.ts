@@ -45,6 +45,13 @@ export type ActivityItem = {
   timestamp: string;
 };
 
+export type MediaAsset = {
+  id: string;
+  label: string;
+  src: string;
+  type: "image" | "video" | "document";
+};
+
 export type Project = {
   id: string;
   code: string;
@@ -60,6 +67,7 @@ export type Project = {
   milestones: Milestone[];
   deliverables: Deliverable[];
   files: ProjectFile[];
+  media?: MediaAsset[];
   activity: ActivityItem[];
 };
 
