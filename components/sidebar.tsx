@@ -32,6 +32,12 @@ function NavIcon({ type, active }: { type: NavItem["icon"]; active: boolean }) {
       return <svg {...shared}><circle cx="12" cy="12" r="8" stroke={stroke} strokeWidth="1.8" /><path d="M12 7v5l3 2" stroke={stroke} strokeWidth="1.8" /></svg>;
     case "settings":
       return <svg {...shared}><path d="M12 8.5A3.5 3.5 0 1 0 12 15.5 3.5 3.5 0 1 0 12 8.5Z" stroke={stroke} strokeWidth="1.8" /><path d="M12 2v3M12 19v3M4.9 4.9l2.2 2.2M16.9 16.9l2.2 2.2M2 12h3M19 12h3M4.9 19.1l2.2-2.2M16.9 7.1l2.2-2.2" stroke={stroke} strokeWidth="1.8" /></svg>;
+    case "users":
+      return <svg {...shared}><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" stroke={stroke} strokeWidth="1.8" /><circle cx="9" cy="7" r="4" stroke={stroke} strokeWidth="1.8" /><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75" stroke={stroke} strokeWidth="1.8" /></svg>;
+    case "box":
+      return <svg {...shared}><path d="M21 8v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8M21 8l-9-5-9 5M21 8l-9 5-9-5M12 13v8" stroke={stroke} strokeWidth="1.8" /></svg>;
+    case "list":
+      return <svg {...shared}><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01" stroke={stroke} strokeWidth="1.8" strokeLinecap="round" /></svg>;
   }
 }
 
@@ -51,26 +57,28 @@ export function Sidebar({
   return (
     <aside className="border-b border-line bg-[#121214]/95 md:min-h-screen md:border-b-0 md:border-r">
       <div className="flex h-full flex-col gap-5 px-3 py-4">
-        <div className="flex items-center gap-4 px-2">
-          <div className="grid h-9 w-9 place-items-center bg-brand text-base font-black uppercase text-white">Z</div>
+        <div className="flex items-center gap-3 px-2">
+          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-[#ff2026] text-white shadow-[0_0_10px_rgba(255,32,38,0.3)]">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M6 3v3m12-3v3M10 3v18M14 3v18M6 21h12M6 8h12"/></svg>
+          </div>
           <div>
-            <div className="display-title text-xl text-white">{title}</div>
-            <div className="mt-1 text-[10px] uppercase tracking-[0.18em] text-mute">{subtitle}</div>
+            <div className="text-sm font-bold tracking-tight text-white">Zoon Labs</div>
+            <div className="text-[9px] font-medium uppercase tracking-[0.2em] text-[#9897a1]">Admin Portal</div>
           </div>
         </div>
 
-      <nav className="grid gap-1.5">
+      <nav className="grid gap-1 mt-4">
         {items.map((item) => {
-          const active = item.href === "/projects" ? pathname.startsWith("/projects") : pathname === item.href;
+          const active = pathname === item.href;
 
           return (
             <Link
               key={`${item.href}-${item.label}`}
               href={item.href}
-              className={`group flex items-center gap-3.5 border-l-4 px-4 py-3 text-[11px] font-medium uppercase tracking-[0.16em] transition md:text-xs ${
+              className={`group flex items-center gap-4 px-4 py-3.5 text-xs font-semibold tracking-wide transition ${
                 active
-                  ? "border-brand bg-black text-white"
-                  : "border-transparent bg-white/[0.02] text-mute hover:bg-white/[0.04] hover:text-white"
+                  ? "bg-[#ff2026]/10 text-[#ff2026] border-r-4 border-[#ff2026]"
+                  : "text-[#9897a1] hover:bg-white/[0.03] hover:text-white"
               }`}
             >
               <NavIcon type={item.icon} active={active} />
@@ -80,16 +88,21 @@ export function Sidebar({
         })}
       </nav>
 
-      <Link
-        href="/projects/create"
-        className="mt-auto inline-flex w-full items-center justify-center gap-2 bg-brand px-4 py-2.5 text-[11px] font-bold uppercase tracking-[0.18em] text-white transition hover:bg-[#ff343a] md:text-xs"
-      >
-        {ctaLabel}
-      </Link>
-
-      <div className="grid gap-4 border-t border-line px-2 pt-6 text-sm text-mute">
-        <a href="#support" className="hover:text-white">Support</a>
-        <a href="#logout" className="hover:text-white">Logout</a>
+      <div className="mt-auto grid gap-1 border-t border-white/5 pt-4">
+        <Link 
+          href="#support" 
+          className="group flex items-center gap-4 px-4 py-3.5 text-xs font-semibold text-[#9897a1] transition hover:bg-white/[0.03] hover:text-white"
+        >
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+          Support
+        </Link>
+        <Link 
+          href="/auth/login" 
+          className="group flex items-center gap-4 px-4 py-3.5 text-xs font-semibold text-[#9897a1] transition hover:bg-white/[0.03] hover:text-white"
+        >
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+          Logout
+        </Link>
       </div>
       </div>
     </aside>

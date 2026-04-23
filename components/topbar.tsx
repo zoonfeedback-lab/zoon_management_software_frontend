@@ -27,29 +27,37 @@ function GearIcon() {
 
 export function Topbar({ sectionTitle }: { sectionTitle?: string }) {
   return (
-    <header className="sticky top-0 z-20 border-b border-line bg-black/90 backdrop-blur">
-      <div className="mx-auto flex w-full max-w-[1680px] flex-col gap-3 px-4 py-2.5 md:flex-row md:items-center md:justify-between md:px-5">
-        <div className="flex min-w-0 flex-1 flex-col gap-4 md:flex-row md:items-center">
-          <div className="display-title text-lg uppercase text-brand">{sectionTitle ?? "zoon"}</div>
-          <label className="flex min-w-0 flex-1 items-center gap-3 border border-line bg-white/[0.03] px-3 py-2 md:max-w-sm">
-            <SearchIcon />
-            <input
-              aria-label="Search projects"
-              placeholder="Search project reviews..."
-              className="min-w-0 flex-1 bg-transparent text-xs text-white placeholder:text-mute md:text-sm"
-            />
-          </label>
+    <header className="sticky top-0 z-20 border-b border-line bg-[#0b0b0d]/80 backdrop-blur-md">
+      <div className="mx-auto flex w-full max-w-[1680px] items-center justify-between px-6 py-4">
+        <div>
+          <h2 className="text-sm font-bold uppercase tracking-[0.25em] text-white/90">
+            {sectionTitle ?? "Client Management"}
+          </h2>
         </div>
 
-        <div className="flex items-center gap-3">
-          <button aria-label="Notifications" className="grid h-8 w-8 place-items-center">
-            <BellIcon />
-          </button>
-          <button aria-label="Settings" className="grid h-8 w-8 place-items-center">
-            <GearIcon />
-          </button>
-          <div className="grid h-9 w-9 place-items-center rounded-full border border-line bg-gradient-to-br from-sky-900 to-sky-500 text-[11px] font-bold text-white">
-            GK
+        <div className="flex items-center gap-6">
+          <div className="flex items-center gap-2 border-r border-white/5 pr-6">
+            <button aria-label="Notifications" className="grid h-9 w-9 place-items-center rounded-lg transition hover:bg-white/5">
+              <BellIcon />
+            </button>
+            <button aria-label="Help" className="grid h-9 w-9 place-items-center rounded-lg transition hover:bg-white/5">
+              <svg className="h-5 w-5 text-[#9897a1]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+            </button>
+          </div>
+          
+          <div className="flex items-center gap-3">
+            <div className="text-right hidden sm:block">
+              <div className="text-xs font-bold text-white">Admin User</div>
+              <div className="text-[10px] font-medium uppercase tracking-wider text-[#9897a1]">System Lead</div>
+            </div>
+            <div className="relative h-10 w-10 overflow-hidden rounded-lg bg-gradient-to-br from-zinc-700 to-zinc-900 border border-white/10 p-0.5 shadow-xl">
+              <img 
+                src="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&q=80&w=100&h=100" 
+                alt="Admin" 
+                className="h-full w-full rounded-md object-cover"
+              />
+              <div className="absolute bottom-0.5 right-0.5 h-2.5 w-2.5 rounded-full border-2 border-[#0b0b0d] bg-success" />
+            </div>
           </div>
         </div>
       </div>
