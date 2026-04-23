@@ -3,10 +3,10 @@ import { Invoice, Metric, NavItem, Project, Review } from "@/lib/types";
 export const primaryNav: NavItem[] = [
   { href: "/overview", label: "Dashboard", icon: "grid" },
   { href: "/projects", label: "Projects", icon: "folder" },
-  { href: "/payments", label: "Payments", icon: "wallet" },
+  { href: "/tasks", label: "Tasks", icon: "task" },
+  { href: "/users", label: "Team", icon: "users" },
   { href: "/clients", label: "Clients", icon: "users" },
-  { href: "/inventory", label: "Inventory", icon: "box" },
-  { href: "/logs", label: "Logs", icon: "list" },
+  { href: "/reports", label: "Reports", icon: "list" },
   { href: "/settings", label: "Settings", icon: "settings" },
 ];
 

@@ -1,190 +1,253 @@
+"use client";
+
+import { useEffect, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { GhostButton, Section } from "@/components/ui";
+
+interface Client {
+  id: string;
+  companyName: string;
+}
+
+interface User {
+  id: string;
+  fullName: string;
+}
 
 export default function CreateProjectPage() {
+  const router = useRouter();
+  const [clients, setClients] = useState<Client[]>([]);
+  const [users, setUsers] = useState<User[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState("");
+
+  const [formData, setFormData] = useState({
+    name: "",
+    description: "",
+    clientId: "",
+    startDate: "",
+    deadline: "",
+    memberIds: [] as string[],
+  });
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const token = localStorage.getItem("access_token");
+        const headers = { Authorization: `Bearer ${token}` };
+
+        const [clientsRes, usersRes] = await Promise.all([
+          fetch("/api/clients", { headers }),
+          fetch("/api/users", { headers }),
+        ]);
+
+        if (!clientsRes.ok || !usersRes.ok) {
+          throw new Error("Failed to fetch initial data");
+        }
+
+        const [clientsData, usersData] = await Promise.all([
+          clientsRes.json(),
+          usersRes.json(),
+        ]);
+
+        setClients(clientsData);
+        setUsers(usersData);
+      } catch (err: any) {
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, []);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSubmitting(true);
+    setError("");
+
+    try {
+      const token = localStorage.getItem("access_token");
+      const response = await fetch("/api/projects", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(formData),
+      });
+
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.message || "Failed to create project");
+      }
+
+      router.push("/projects");
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleMemberToggle = (userId: string) => {
+    setFormData(prev => ({
+      ...prev,
+      memberIds: prev.memberIds.includes(userId)
+        ? prev.memberIds.filter(id => id !== userId)
+        : [...prev.memberIds, userId]
+    }));
+  };
+
+  if (loading) {
+    return <div className="flex h-[400px] items-center justify-center text-mute uppercase tracking-[0.2em]">Synchronizing Command Center...</div>;
+  }
+
   return (
-    <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_430px]">
-      <section className="grid gap-6">
-        <div className="flex flex-col justify-between gap-5 border-b border-line pb-6 xl:flex-row xl:items-end">
+    <div className="grid gap-8 xl:grid-cols-[1fr_450px]">
+      <section className="grid gap-8">
+        <div className="flex flex-col justify-between gap-6 xl:flex-row xl:items-end">
           <div>
-            <p className="mb-3 text-xs font-semibold uppercase tracking-[0.28em] text-brand">zoon / Initialize Project</p>
-            <h1 className="display-title text-4xl text-white md:text-6xl">Command Center</h1>
-            <p className="mt-4 max-w-4xl text-base leading-7 text-mute md:text-lg">
-              Set up a new delivery pipeline, attach starter files, and lock in the project metadata before kickoff.
+            <p className="mb-3 text-[10px] font-bold uppercase tracking-[0.3em] text-[#ff2026]">Zoon / Initialize Project</p>
+            <h1 className="display-title text-4xl text-white md:text-6xl font-bold">Project Genesis</h1>
+            <p className="mt-4 max-w-2xl text-lg leading-relaxed text-[#9897a1]">
+              Define the mission parameters, select your engineering squad, and establish the delivery timeline.
             </p>
           </div>
-          <div className="flex -space-x-2">
-            {["EL", "SK", "MV"].map((member) => (
-              <div
-                key={member}
-                className="grid h-9 w-9 place-items-center border border-black bg-gradient-to-br from-sky-900 to-sky-500 text-xs font-bold text-white"
-              >
-                {member}
-              </div>
-            ))}
-            <div className="grid h-9 w-9 place-items-center border border-black bg-[#2a2a2a] text-[10px] text-zinc-400">+15</div>
-          </div>
         </div>
 
-        <div className="grid gap-4 md:grid-cols-4">
-          {[
-            ["Total Projects", "42", "+4 this month", "text-brand"],
-            ["Active Nodes", "12", "Real-time tracking enabled", "text-brand"],
-            ["Total Revenue", "$124k", "Q3 projections met", "text-white"],
-            ["Team Members", "18", "Manage directory", "text-brand"],
-          ].map(([label, value, note, accent]) => (
-            <article key={label} className="panel-surface grid gap-3 p-5">
-              <div className="text-xs uppercase tracking-[0.22em] text-mute">{label}</div>
-              <div className="display-title text-4xl text-white">{value}</div>
-              <div className={`text-sm ${accent}`}>{note}</div>
-            </article>
-          ))}
-        </div>
-
-        <div className="grid gap-4 xl:grid-cols-[minmax(0,1.8fr)_360px]">
-          <section className="panel-surface overflow-hidden">
-            <div className="flex items-center justify-between border-b border-line px-5 py-4 md:px-6">
-              <h2 className="text-xl font-semibold uppercase text-white">Active Pipeline</h2>
-              <span className="text-sm text-mute">Live Feed</span>
-            </div>
-            <div className="overflow-x-auto">
-              <table className="min-w-full border-collapse">
-                <thead>
-                  <tr>
-                    {["Project Name", "Client", "Status", "Health", "Deadline"].map((heading) => (
-                      <th key={heading} className="border-b border-line bg-black/40 px-5 py-4 text-left text-[11px] uppercase tracking-[0.22em] text-mute">
-                        {heading}
-                      </th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {[
-                    ["Epsilon Core", "Aether Tech", "Development", "75%", "OCT 24"],
-                    ["Project Nexus", "Cyberdyne Systems", "Design", "40%", "NOV 12"],
-                    ["Ghost Protocol", "Private Client", "QA Phase", "90%", "OCT 19"],
-                    ["Titan Infra", "Stark Indust.", "Development", "15%", "DEC 05"],
-                  ].map(([project, client, status, health, deadline], index) => (
-                    <tr key={project} className={index % 2 === 1 ? "bg-black/20" : ""}>
-                      <td className="border-b border-line px-5 py-5 font-semibold text-white">{project}</td>
-                      <td className="border-b border-line px-5 py-5 text-mute">{client}</td>
-                      <td className="border-b border-line px-5 py-5">
-                        <span className={`inline-flex items-center gap-2 border px-2 py-1 text-[10px] font-bold uppercase tracking-[0.18em] ${
-                          status === "Design" ? "border-white text-white" : status === "QA Phase" ? "border-zinc-600 text-zinc-500" : "border-brand text-brand"
-                        }`}>
-                          <span className="h-1.5 w-1.5 rounded-full bg-current" />
-                          {status}
-                        </span>
-                      </td>
-                      <td className="border-b border-line px-5 py-5">
-                        <div className="h-1 w-20 bg-zinc-800">
-                          <div
-                            className={`${status === "Design" ? "bg-white" : status === "QA Phase" ? "bg-zinc-500" : "bg-brand"} h-1`}
-                            style={{ width: health }}
-                          />
-                        </div>
-                      </td>
-                      <td className="border-b border-line px-5 py-5 text-right text-xs uppercase tracking-[0.16em] text-white">{deadline}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </section>
-
-          <section className="panel-surface overflow-hidden">
-            <div className="border-b border-line px-5 py-4 md:px-6">
-              <h2 className="text-xl font-semibold uppercase text-white">Recent Activity</h2>
-            </div>
-            <div className="grid gap-6 p-5 md:p-6">
-              {[
-                ["New Deployment", "Project Epsilon v2.4.1 successful. Latency reduced by 14%.", "2 mins ago", "border-brand text-brand"],
-                ["Invoice Paid", "Invoice #ZN-2024-089 settled for $14,500.00.", "1 hour ago", "border-white text-white"],
-                ["New Review", '"The architecture of Nexus is outstanding. Efficient and scalable."', "4 hours ago", "border-zinc-500 text-zinc-400"],
-              ].map(([title, detail, time, tone]) => (
-                <div key={title} className="grid grid-cols-[32px_minmax(0,1fr)] gap-4">
-                  <div className={`h-8 w-8 border-2 ${tone}`} />
-                  <div>
-                    <div className="text-sm font-semibold text-white">{title}</div>
-                    <p className="mt-1 text-sm leading-6 text-mute">{detail}</p>
-                    <div className="mt-2 text-[11px] uppercase tracking-[0.18em] text-brand">{time}</div>
-                  </div>
+        <div className="grid gap-4 md:grid-cols-2">
+          <Section title="Active Statistics" eyebrow="Live Feed">
+             <div className="grid gap-6 p-6">
+                <div className="flex justify-between items-center">
+                   <span className="text-[10px] font-bold uppercase tracking-widest text-[#9897a1]">Nodes in Grid</span>
+                   <span className="font-mono text-xl text-white">42</span>
                 </div>
-              ))}
-            </div>
-          </section>
+                <div className="flex justify-between items-center">
+                   <span className="text-[10px] font-bold uppercase tracking-widest text-[#9897a1]">System Load</span>
+                   <span className="font-mono text-xl text-[#ff2026]">84%</span>
+                </div>
+             </div>
+          </Section>
+          <Section title="Guidelines" eyebrow="Protocol">
+             <div className="p-6 text-xs text-[#9897a1] leading-relaxed uppercase tracking-widest">
+                Ensure all technical requirements are attached. Verify client clearance before initializing.
+             </div>
+          </Section>
         </div>
       </section>
 
-      <aside className="relative overflow-hidden border border-line bg-[#1a1a1a] shadow-[0_18px_48px_rgba(0,0,0,0.28)]">
-        <div className="flex items-center justify-between border-b border-line px-6 py-5">
-          <div>
-            <h2 className="display-title text-2xl uppercase italic text-white">Create Project</h2>
-            <p className="mt-2 text-xs uppercase tracking-[0.2em] text-mute">Initialize a new deployment pipeline.</p>
-          </div>
-          <Link href="/projects" className="text-sm text-mute transition hover:text-white">
-            Close
-          </Link>
+      <form onSubmit={handleSubmit} className="relative overflow-hidden border border-white/5 bg-[#171719] shadow-2xl rounded-xl">
+        <div className="border-b border-white/5 bg-white/[0.02] px-8 py-6">
+          <h2 className="display-title text-2xl font-bold text-white italic">Initialize Deployment</h2>
+          <p className="mt-1 text-[10px] font-bold uppercase tracking-[0.2em] text-[#9897a1]">Project Metadata Entry</p>
         </div>
 
-        <div className="grid gap-7 p-6">
-          <label className="grid gap-3">
-            <span className="text-[11px] font-bold uppercase tracking-[0.22em] text-mute">Project Name</span>
+        <div className="grid gap-6 p-8 overflow-y-auto max-h-[calc(100vh-300px)]">
+          {error && (
+            <div className="bg-brand/10 border border-brand/20 p-4 rounded text-brand text-xs font-bold uppercase tracking-widest">
+              Error: {error}
+            </div>
+          )}
+
+          <div className="grid gap-2">
+            <span className="text-[10px] font-black uppercase tracking-[0.2em] text-[#9897a1]">Project Name</span>
             <input
+              required
               type="text"
+              value={formData.name}
+              onChange={e => setFormData({ ...formData, name: e.target.value })}
               placeholder="e.g. Project Epsilon"
-              className="border border-line bg-black/45 px-4 py-3 text-sm text-white placeholder:text-zinc-600"
+              className="rounded-lg border border-white/5 bg-[#0b0b0d] px-4 py-3 text-sm text-white transition-all focus:border-[#ff2026]/30 focus:ring-1 focus:ring-[#ff2026]/20 placeholder:text-zinc-700"
             />
-          </label>
-
-          <label className="grid gap-3">
-            <span className="text-[11px] font-bold uppercase tracking-[0.22em] text-mute">Description</span>
-            <textarea
-              rows={4}
-              placeholder="Enter project details..."
-              className="resize-none border border-line bg-black/45 px-4 py-3 text-sm text-white placeholder:text-zinc-600"
-            />
-          </label>
-
-          <div className="grid gap-3">
-            <span className="text-[11px] font-bold uppercase tracking-[0.22em] text-mute">Cover Image</span>
-            <label className="grid cursor-pointer place-items-center gap-3 border-2 border-dashed border-line bg-black/45 px-6 py-10 text-center transition hover:border-brand">
-              <span className="text-4xl text-zinc-600">[]</span>
-              <div className="text-sm text-zinc-300">
-                <span className="font-semibold text-brand">Upload a file</span>
-                <span className="text-zinc-500"> or drag and drop</span>
-              </div>
-              <span className="text-[11px] uppercase tracking-[0.2em] text-zinc-500">PNG, JPG, GIF up to 10MB</span>
-              <input type="file" accept="image/*" className="hidden" />
-            </label>
           </div>
 
-          <div className="grid gap-3">
-            <span className="text-[11px] font-bold uppercase tracking-[0.22em] text-mute">Project Files</span>
-            <label className="grid cursor-pointer place-items-center gap-3 border-2 border-dashed border-line bg-black/45 px-6 py-10 text-center transition hover:border-white">
-              <span className="text-4xl text-zinc-600">##</span>
-              <div className="text-sm text-zinc-300">
-                <span className="font-semibold text-white">Select files</span>
-                <span className="text-zinc-500"> to attach</span>
-              </div>
-              <span className="text-[11px] uppercase tracking-[0.2em] text-zinc-500">ZIP, PDF, DOCX supported</span>
-              <span className="bg-brand/10 px-2 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-brand">Max file size 50MB</span>
-              <input type="file" accept=".zip,.pdf,.docx" className="hidden" />
-            </label>
+          <div className="grid gap-2">
+            <span className="text-[10px] font-black uppercase tracking-[0.2em] text-[#9897a1]">Client / Partner</span>
+            <select
+              required
+              value={formData.clientId}
+              onChange={e => setFormData({ ...formData, clientId: e.target.value })}
+              className="rounded-lg border border-white/5 bg-[#0b0b0d] px-4 py-3 text-sm text-white transition-all focus:border-[#ff2026]/30 focus:ring-1 focus:ring-[#ff2026]/20"
+            >
+              <option value="">Select Client Node</option>
+              {clients.map(client => (
+                <option key={client.id} value={client.id}>{client.companyName}</option>
+              ))}
+            </select>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div className="grid gap-2">
+              <span className="text-[10px] font-black uppercase tracking-[0.2em] text-[#9897a1]">Start Date</span>
+              <input
+                required
+                type="date"
+                value={formData.startDate}
+                onChange={e => setFormData({ ...formData, startDate: e.target.value })}
+                className="rounded-lg border border-white/5 bg-[#0b0b0d] px-4 py-3 text-sm text-white transition-all focus:border-[#ff2026]/30 focus:ring-1 focus:ring-[#ff2026]/20"
+              />
+            </div>
+            <div className="grid gap-2">
+              <span className="text-[10px] font-black uppercase tracking-[0.2em] text-[#9897a1]">Deadline</span>
+              <input
+                required
+                type="date"
+                value={formData.deadline}
+                onChange={e => setFormData({ ...formData, deadline: e.target.value })}
+                className="rounded-lg border border-white/5 bg-[#0b0b0d] px-4 py-3 text-sm text-white transition-all focus:border-[#ff2026]/30 focus:ring-1 focus:ring-[#ff2026]/20"
+              />
+            </div>
+          </div>
+
+          <div className="grid gap-2">
+            <span className="text-[10px] font-black uppercase tracking-[0.2em] text-[#9897a1]">Engineering Squad</span>
+            <div className="grid gap-2 max-h-48 overflow-y-auto rounded-lg border border-white/5 bg-[#0b0b0d] p-4">
+               {users.map(user => (
+                 <label key={user.id} className="flex items-center gap-3 cursor-pointer group">
+                    <input 
+                      type="checkbox" 
+                      checked={formData.memberIds.includes(user.id)}
+                      onChange={() => handleMemberToggle(user.id)}
+                      className="h-4 w-4 rounded border-white/10 bg-white/5 text-brand accent-brand"
+                    />
+                    <span className="text-xs text-[#9897a1] group-hover:text-white transition-colors">{user.fullName}</span>
+                 </label>
+               ))}
+            </div>
+          </div>
+
+          <div className="grid gap-2">
+            <span className="text-[10px] font-black uppercase tracking-[0.2em] text-[#9897a1]">Mission Description</span>
+            <textarea
+              rows={3}
+              value={formData.description}
+              onChange={e => setFormData({ ...formData, description: e.target.value })}
+              placeholder="Primary objectives..."
+              className="resize-none rounded-lg border border-white/5 bg-[#0b0b0d] px-4 py-3 text-sm text-white transition-all focus:border-[#ff2026]/30 focus:ring-1 focus:ring-[#ff2026]/20 placeholder:text-zinc-700"
+            />
           </div>
         </div>
 
-        <div className="flex gap-3 border-t border-line bg-[#1a1a1a] px-6 py-5">
+        <div className="flex gap-4 border-t border-white/5 bg-white/[0.01] px-8 py-6">
           <Link
             href="/projects"
-            className="flex-1 border border-line px-4 py-3 text-center text-xs font-bold uppercase tracking-[0.18em] text-zinc-400 transition hover:bg-[#2a2a2a] hover:text-white"
+            className="flex-1 rounded-lg border border-white/5 px-4 py-3.5 text-center text-[10px] font-black uppercase tracking-widest text-[#9897a1] transition hover:bg-white/5 hover:text-white"
           >
             Cancel
           </Link>
-          <button className="flex-1 bg-brand px-4 py-3 text-xs font-bold uppercase tracking-[0.18em] text-white transition hover:bg-[#ff343a]">
-            Initialize
+          <button 
+            disabled={submitting}
+            type="submit"
+            className="flex-1 rounded-lg bg-[#ff2026] px-4 py-3.5 text-[10px] font-black uppercase tracking-widest text-white transition hover:bg-[#ff343a] shadow-[0_4px_14px_rgba(255,32,38,0.3)] disabled:opacity-50"
+          >
+            {submitting ? "Initializing..." : "Kickoff Project"}
           </button>
         </div>
-      </aside>
+      </form>
     </div>
   );
 }
