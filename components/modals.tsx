@@ -1045,3 +1045,122 @@ export function TaskDetailsModal({
     </Modal>
   );
 }
+export function CreateClientModal({
+  isOpen,
+  onClose,
+  onCreate,
+}: {
+  isOpen: boolean;
+  onClose: () => void;
+  onCreate?: (client: any) => void;
+}) {
+  const [loading, setLoading] = useState(false);
+  const [formData, setFormData] = useState({
+    companyName: "",
+    contactPerson: "",
+    email: "",
+    phone: "",
+  });
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    try {
+      const token = localStorage.getItem("access_token");
+      const res = await fetch("/api/clients", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(formData),
+      });
+      if (res.ok) {
+        const newClient = await res.json();
+        if (onCreate) onCreate(newClient);
+        onClose();
+        setFormData({
+          companyName: "",
+          contactPerson: "",
+          email: "",
+          phone: "",
+        });
+      }
+    } catch (err) {
+      console.error("Client creation failed:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <Modal isOpen={isOpen} onClose={onClose} title="Register Client Partner" size="md">
+      <form onSubmit={handleSubmit} className="grid gap-5">
+        <div className="grid gap-2">
+          <label className="text-xs font-black uppercase tracking-widest text-[#9897a1]">Company Name</label>
+          <input
+            required
+            type="text"
+            className="bg-[#0b0b0d] border border-white/10 text-white px-4 py-3 rounded-lg focus:border-brand/30 outline-none"
+            placeholder="e.g., Acme Corp"
+            value={formData.companyName}
+            onChange={(e) => setFormData({ ...formData, companyName: e.target.value })}
+          />
+        </div>
+
+        <div className="grid gap-2">
+          <label className="text-xs font-black uppercase tracking-widest text-[#9897a1]">Contact Person</label>
+          <input
+            required
+            type="text"
+            className="bg-[#0b0b0d] border border-white/10 text-white px-4 py-3 rounded-lg focus:border-brand/30 outline-none"
+            placeholder="Jane Smith"
+            value={formData.contactPerson}
+            onChange={(e) => setFormData({ ...formData, contactPerson: e.target.value })}
+          />
+        </div>
+
+        <div className="grid md:grid-cols-2 gap-4">
+          <div className="grid gap-2">
+            <label className="text-xs font-black uppercase tracking-widest text-[#9897a1]">Email Address</label>
+            <input
+              required
+              type="email"
+              className="bg-[#0b0b0d] border border-white/10 text-white px-4 py-3 rounded-lg focus:border-brand/30 outline-none"
+              placeholder="contact@acme.com"
+              value={formData.email}
+              onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+            />
+          </div>
+          <div className="grid gap-2">
+            <label className="text-xs font-black uppercase tracking-widest text-[#9897a1]">Phone Number</label>
+            <input
+              type="text"
+              className="bg-[#0b0b0d] border border-white/10 text-white px-4 py-3 rounded-lg focus:border-brand/30 outline-none"
+              placeholder="+1-..."
+              value={formData.phone}
+              onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+            />
+          </div>
+        </div>
+
+        <div className="flex gap-4 pt-4 border-t border-white/5">
+          <button
+            type="button"
+            onClick={onClose}
+            className="flex-1 px-4 py-3.5 border border-white/10 text-[#9897a1] font-bold uppercase tracking-widest text-[10px] hover:bg-white/5 transition-colors rounded-lg"
+          >
+            Cancel
+          </button>
+          <button
+            disabled={loading}
+            type="submit"
+            className="flex-1 px-4 py-3.5 bg-brand text-white font-bold uppercase tracking-widest text-[10px] hover:bg-[#ff343a] transition-colors rounded-lg shadow-[0_4px_14px_rgba(255,32,38,0.3)] disabled:opacity-50"
+          >
+            {loading ? "Registering..." : "Authorize Partner"}
+          </button>
+        </div>
+      </form>
+    </Modal>
+  );
+}
