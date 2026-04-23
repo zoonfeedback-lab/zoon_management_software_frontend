@@ -66,7 +66,7 @@ export default function LoginPage() {
                 </div>
               </div>
               <div>
-                <div className="display-title text-4xl leading-tight text-[#ff2026] md:text-5xl">Zoonlabs</div>
+                <div className="display-title text-4xl leading-tight text-[#ff2026] md:text-5xl">ZOON</div>
                 <div className="mt-1 text-sm uppercase tracking-[0.25em] text-[#eac0b5]/80 md:text-base">Engineering Hub</div>
               </div>
             </div>

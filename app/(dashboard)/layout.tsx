@@ -5,7 +5,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   return (
     <DashboardShell
       navItems={primaryNav}
-      brandTitle="zoon"
+      brandTitle="ZOON"
       brandSubtitle="Engineering Hub"
       ctaLabel="Create Project"
     >

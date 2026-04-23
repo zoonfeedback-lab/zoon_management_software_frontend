@@ -64,7 +64,7 @@ export default function SettingsClient() {
                     </label>
                     <label className="grid gap-2">
                        <span className="text-[10px] font-black uppercase tracking-widest text-[#9897a1]">Communication Email</span>
-                       <input type="email" defaultValue="admin@zoonlabs.int" className="bg-[#0b0b0d] border border-white/10 rounded-lg px-4 py-3 text-sm text-white outline-none focus:border-brand/30" />
+                       <input type="email" defaultValue="admin@zoon.int" className="bg-[#0b0b0d] border border-white/10 rounded-lg px-4 py-3 text-sm text-white outline-none focus:border-brand/30" />
                     </label>
                  </div>
                  
