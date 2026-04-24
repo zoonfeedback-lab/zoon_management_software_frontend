@@ -37,7 +37,7 @@ export default function TasksClient() {
       }
 
       const res = await response.json();
-      setTasks(res.data);
+      setTasks(res.data || []);
     } catch (err: any) {
       setError(err.message);
     } finally {
@@ -109,11 +109,11 @@ export default function TasksClient() {
                  <div className={`h-2 w-2 rounded-full ${column.id === 'TODO' ? 'bg-zinc-600' : column.id === 'IN_PROGRESS' ? 'bg-brand' : 'bg-success'}`} />
                  <h2 className="text-[10px] font-black uppercase tracking-[0.2em] text-[#9897a1]">{column.label}</h2>
               </div>
-              <span className="font-mono text-[10px] font-bold text-white/40">{tasks.filter(t => t.status === column.id).length}</span>
+              <span className="font-mono text-[10px] font-bold text-white/40">{Array.isArray(tasks) ? tasks.filter(t => t.status === column.id).length : 0}</span>
             </div>
             
             <div className="flex flex-col gap-4 min-h-[500px]">
-              {tasks.filter((t) => t.status === column.id).map((task) => (
+              {(Array.isArray(tasks) ? tasks.filter((t) => t.status === column.id) : []).map((task) => (
                 <article 
                   key={task.id} 
                   onClick={() => setSelectedTask(task)}
@@ -154,7 +154,7 @@ export default function TasksClient() {
                 </article>
               ))}
               
-              {tasks.filter((t) => t.status === column.id).length === 0 && (
+              {(Array.isArray(tasks) ? tasks.filter((t) => t.status === column.id) : []).length === 0 && (
                 <div className="flex flex-col items-center justify-center py-10 border border-dashed border-white/5 rounded-xl text-[9px] font-bold uppercase tracking-widest text-[#9897a1]/30">
                    Empty Sector
                 </div>

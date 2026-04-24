@@ -744,6 +744,7 @@ export function CreateTaskModal({
   onCreate?: (task: any) => void;
 }) {
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
   const [projects, setProjects] = useState<any[]>([]);
   const [users, setUsers] = useState<any[]>([]);
   const [formData, setFormData] = useState({
@@ -764,8 +765,8 @@ export function CreateTaskModal({
             api.get("/users"),
           ]);
           if (pRes.ok && uRes.ok) {
-            setProjects((await pRes.json()).data);
-            setUsers((await uRes.json()).data);
+            setProjects((await pRes.json()).data || []);
+            setUsers((await uRes.json()).data || []);
           }
         } catch (err) {
           console.error("Failed to fetch task form data:", err);
@@ -778,8 +779,14 @@ export function CreateTaskModal({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
+    setError("");
+
+    // Clean data: don't send empty string for optional UUID
+    const payload = { ...formData };
+    if (!payload.assignedToId) delete payload.assignedToId;
+
     try {
-      const res = await api.post("/tasks", formData);
+      const res = await api.post("/tasks", payload);
       if (res.ok) {
         const newTask = (await res.json()).data;
         if (onCreate) onCreate(newTask);
@@ -792,8 +799,12 @@ export function CreateTaskModal({
           priority: "MEDIUM",
           dueDate: "",
         });
+      } else {
+        const errJson = await res.json();
+        setError(errJson.message || "Failed to create task");
       }
-    } catch (err) {
+    } catch (err: any) {
+      setError(err.message || "Task creation failed");
       console.error("Task creation failed:", err);
     } finally {
       setLoading(false);
@@ -803,6 +814,11 @@ export function CreateTaskModal({
   return (
     <Modal isOpen={isOpen} onClose={onClose} title="Initialize Task" size="md">
       <form onSubmit={handleSubmit} className="grid gap-5">
+        {error && (
+          <div className="bg-brand/10 border border-brand/20 p-3 rounded text-brand text-[10px] font-bold uppercase tracking-wider">
+            {error}
+          </div>
+        )}
         <div className="grid gap-2">
           <label className="text-xs font-black uppercase tracking-widest text-[#9897a1]">Task Title</label>
           <input
@@ -836,7 +852,13 @@ export function CreateTaskModal({
               onChange={(e) => setFormData({ ...formData, assignedToId: e.target.value })}
             >
               <option value="">Unassigned</option>
-              {users.map(u => <option key={u.id} value={u.id}>{u.fullName}</option>)}
+              {formData.projectId ? (
+                projects.find(p => p.id === formData.projectId)?.members?.map((m: any) => (
+                  <option key={m.user.id} value={m.user.id}>{m.user.fullName}</option>
+                ))
+              ) : (
+                users.map(u => <option key={u.id} value={u.id}>{u.fullName}</option>)
+              )}
             </select>
           </div>
         </div>
@@ -852,7 +874,6 @@ export function CreateTaskModal({
               <option value="LOW">LOW</option>
               <option value="MEDIUM">MEDIUM</option>
               <option value="HIGH">HIGH</option>
-              <option value="CRITICAL">CRITICAL</option>
             </select>
           </div>
           <div className="grid gap-2">
@@ -906,9 +927,10 @@ export function TaskDetailsModal({
   onClose: () => void;
   task: any;
 }) {
+  const [loading, setLoading] = useState(false);
+  const [fullTask, setFullTask] = useState<any>(task);
   const [comments, setComments] = useState<any[]>([]);
   const [newComment, setNewComment] = useState("");
-  const [loading, setLoading] = useState(false);
 
   const fetchComments = async () => {
     if (!task?.id) return;
@@ -922,8 +944,22 @@ export function TaskDetailsModal({
     }
   };
 
-  React.useEffect(() => {
+  const fetchTaskDetails = async () => {
+    if (!task?.id) return;
+    try {
+      const res = await api.get(`/tasks/${task.id}`);
+      if (res.ok) {
+        const data = await res.json();
+        setFullTask(data.data);
+      }
+    } catch (err) {
+      console.error("Failed to fetch task details:", err);
+    }
+  };
+
+  useEffect(() => {
     if (isOpen && task?.id) {
+      fetchTaskDetails();
       fetchComments();
     }
   }, [isOpen, task?.id]);
@@ -954,12 +990,16 @@ export function TaskDetailsModal({
         <div className="grid gap-8">
           <div>
             <div className="flex items-center gap-3 mb-2">
-               <span className="text-[10px] font-black uppercase tracking-widest text-brand">{task.project.name}</span>
+               <span className="text-[10px] font-black uppercase tracking-widest text-brand">{fullTask?.project?.name || "Sector Assigned"}</span>
                <div className="h-1 w-1 rounded-full bg-[#9897a1]/40" />
-               <span className="text-[10px] font-bold uppercase tracking-widest text-[#9897a1]">{task.status}</span>
+               <span className="text-[10px] font-bold uppercase tracking-widest text-[#9897a1]">{fullTask?.status}</span>
+               <div className="h-1 w-1 rounded-full bg-[#9897a1]/40" />
+               <span className={`text-[10px] font-bold uppercase tracking-widest ${fullTask?.priority === 'HIGH' ? 'text-brand' : 'text-zinc-500'}`}>
+                  {fullTask?.priority} Priority
+               </span>
             </div>
-            <h2 className="text-2xl font-bold text-white">{task.title}</h2>
-            <p className="mt-4 text-sm text-[#9897a1] leading-relaxed">{task.description || "No mission description provided."}</p>
+            <h2 className="text-2xl font-bold text-white">{fullTask?.title}</h2>
+            <p className="mt-4 text-sm text-[#9897a1] leading-relaxed">{fullTask?.description || "No mission description provided."}</p>
           </div>
 
           <div className="grid gap-6">
