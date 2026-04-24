@@ -36,18 +36,15 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="relative h-[100dvh] overflow-hidden bg-[#09090b]">
-      {/* Brand accent line */}
-      <div className="absolute inset-y-0 left-0 w-[2px] bg-[#ff2026] shadow-[0_0_15px_rgba(255,32,38,0.5)]" />
-      
+    <div className="relative min-h-screen bg-[#09090b]">
       {/* Background Grid */}
       <div className="grid-bg absolute inset-0 opacity-20" />
       
-      <div className="relative h-[100dvh]">
-        <main className="mx-auto flex h-full w-full max-w-6xl items-center justify-center px-4 pb-28 pt-10 sm:px-6 sm:pb-32 sm:pt-14">
+      <div className="relative mx-auto flex min-h-screen w-full max-w-6xl flex-col justify-center px-5 pb-[80px] pt-[60px]">
+        <main className="flex w-full items-center justify-center">
           <div className="flex w-full max-w-[560px] flex-col items-center">
             {/* Logo Section */}
-            <div className="mb-8 flex items-center gap-5 sm:mb-9">
+            <div className="mb-6 flex items-center gap-5">
               <div className="relative h-[64px] w-[64px] overflow-hidden rounded-lg bg-[#ff2026] shadow-[0_0_20px_rgba(255,32,38,0.3)]">
                 <div className="absolute inset-0 flex items-center justify-center font-mono text-2xl font-bold text-white">
                    <div className="border-2 border-white/90 px-1 py-0.5 rounded flex items-center gap-1">
@@ -151,7 +148,7 @@ export default function LoginPage() {
               <span className="relative flex h-2 w-2">
                 <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[#ff2026] opacity-75"></span>
                 <span className="relative inline-flex h-2 w-2 rounded-full bg-[#ff2026]"></span>
-              </span> 
+              </span>
               Auth_Server: <span className="text-[#ff2026]">Online</span>
             </span>
             <span className="flex items-center gap-2">
