@@ -52,8 +52,8 @@ export default function CreateProjectPage() {
           usersRes.json(),
         ]);
 
-        setClients(clientsData);
-        setUsers(usersData);
+        setClients(clientsData.data || []);
+        setUsers(usersData.data || []);
       } catch (err: any) {
         setError(err.message);
       } finally {
