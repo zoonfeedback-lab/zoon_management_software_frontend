@@ -4,6 +4,8 @@ import { useEffect, useState } from "react";
 import { GhostButton, Section } from "@/components/ui";
 import { CreateTaskModal, TaskDetailsModal } from "@/components/modals";
 
+import { api } from "@/lib/api";
+
 interface Task {
   id: string;
   title: string;
@@ -28,19 +30,14 @@ export default function TasksClient() {
 
   const fetchTasks = async () => {
     try {
-      const token = localStorage.getItem("access_token");
-      const response = await fetch("/api/tasks", {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+      const response = await api.get("/tasks");
 
       if (!response.ok) {
         throw new Error("Failed to fetch tasks");
       }
 
-      const data = await response.json();
-      setTasks(data);
+      const res = await response.json();
+      setTasks(res.data);
     } catch (err: any) {
       setError(err.message);
     } finally {
@@ -54,15 +51,7 @@ export default function TasksClient() {
 
   const handleUpdateStatus = async (taskId: string, newStatus: string) => {
     try {
-      const token = localStorage.getItem("access_token");
-      const response = await fetch(`/api/tasks/${taskId}`, {
-        method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({ status: newStatus }),
-      });
+      const response = await api.patch(`/tasks/${taskId}`, { status: newStatus });
 
       if (response.ok) {
         fetchTasks();

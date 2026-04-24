@@ -4,6 +4,8 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { GhostButton } from "@/components/ui";
 
+import { api } from "@/lib/api";
+
 interface User {
   id: string;
   fullName: string;
@@ -25,19 +27,14 @@ export default function UsersClient() {
   useEffect(() => {
     const fetchUsers = async () => {
       try {
-        const token = localStorage.getItem("access_token");
-        const response = await fetch("/api/users", {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
+        const response = await api.get("/users");
 
         if (!response.ok) {
           throw new Error("Failed to fetch users");
         }
 
-        const data = await response.json();
-        setUsers(data);
+        const res = await response.json();
+        setUsers(res.data);
       } catch (err: any) {
         setError(err.message);
       } finally {

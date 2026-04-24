@@ -3,6 +3,8 @@
 import { useEffect, useState } from "react";
 import { CreateClientModal } from "@/components/modals";
 
+import { api } from "@/lib/api";
+
 interface Client {
   id: string;
   companyName: string;
@@ -21,19 +23,14 @@ export default function ClientsClient() {
 
   const fetchClients = async () => {
     try {
-      const token = localStorage.getItem("access_token");
-      const response = await fetch("/api/clients", {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+      const response = await api.get("/clients");
 
       if (!response.ok) {
         throw new Error("Failed to fetch clients");
       }
 
-      const data = await response.json();
-      setClients(data);
+      const res = await response.json();
+      setClients(res.data);
     } catch (err: any) {
       setError(err.message);
     } finally {
