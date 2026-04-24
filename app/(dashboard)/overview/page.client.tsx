@@ -5,6 +5,8 @@ import Link from "next/link";
 import { GhostButton, ProgressBar, Section, StatusBadge } from "@/components/ui";
 import { CreateProjectModal } from "@/components/modals";
 
+import { api } from "@/lib/api";
+
 interface OverviewData {
   projects: any[];
   metrics: {
@@ -22,21 +24,18 @@ export default function OverviewClient() {
 
   const fetchData = async () => {
     try {
-      const token = localStorage.getItem("access_token");
-      const headers = { Authorization: `Bearer ${token}` };
-
       const [pRes, uRes, cRes, tRes] = await Promise.all([
-        fetch("/api/projects", { headers }),
-        fetch("/api/users", { headers }),
-        fetch("/api/clients", { headers }),
-        fetch("/api/tasks", { headers }),
+        api.get("/projects"),
+        api.get("/users"),
+        api.get("/clients"),
+        api.get("/tasks"),
       ]);
 
       if (pRes.ok && uRes.ok && cRes.ok && tRes.ok) {
-        const projects = await pRes.json();
-        const users = await uRes.json();
-        const clients = await cRes.json();
-        const tasks = await tRes.json();
+        const projects = (await pRes.json()).data;
+        const users = (await uRes.json()).data;
+        const clients = (await cRes.json()).data;
+        const tasks = (await tRes.json()).data;
 
         setData({
           projects,

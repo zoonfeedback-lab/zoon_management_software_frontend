@@ -4,6 +4,8 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { GhostButton, ProgressBar, Section, StatusBadge } from "@/components/ui";
 
+import { api } from "@/lib/api";
+
 interface Project {
   id: string;
   name: string;
@@ -23,19 +25,14 @@ export default function ProjectsClient() {
   useEffect(() => {
     const fetchProjects = async () => {
       try {
-        const token = localStorage.getItem("access_token");
-        const response = await fetch("/api/projects", {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
+        const response = await api.get("/projects");
 
         if (!response.ok) {
           throw new Error("Failed to fetch projects");
         }
 
-        const data = await response.json();
-        setProjects(data);
+        const res = await response.json();
+        setProjects(res.data);
       } catch (err: any) {
         setError(err.message);
       } finally {

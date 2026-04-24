@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { api } from "@/lib/api";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
@@ -16,22 +17,15 @@ export default function LoginPage() {
     setLoading(true);
 
     try {
-      const response = await fetch(`/api/auth/login`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ email, password }),
-      });
+      const response = await api.post("/auth/login", { email, password });
 
+      const data = await response.json();
       if (!response.ok) {
-        const data = await response.json();
         throw new Error(data.message || "Invalid credentials.");
       }
 
-      const data = await response.json();
-      // Store the token (in a real app, use a secure cookie or better storage)
-      localStorage.setItem("access_token", data.accessToken);
+      // Store the token
+      localStorage.setItem("access_token", data.data.accessToken);
       
       router.push("/overview");
     } catch (err: any) {

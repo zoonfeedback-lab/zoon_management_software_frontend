@@ -1,6 +1,7 @@
 "use client";
 
-import React, { ReactNode, useState } from "react";
+import React, { ReactNode, useEffect, useState } from "react";
+import { api } from "@/lib/api";
 
 type ModalProps = {
   isOpen: boolean;
@@ -52,22 +53,48 @@ export function Modal({
 export function CreateProjectModal({
   isOpen,
   onClose,
+  onCreate,
 }: {
   isOpen: boolean;
   onClose: () => void;
+  onCreate?: () => void;
 }) {
+  const [clients, setClients] = useState<any[]>([]);
+  const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     name: "",
-    client: "",
-    category: "",
-    budget: "",
-    timeline: "",
+    clientId: "",
+    description: "",
+    startDate: "",
+    deadline: "",
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
+  useEffect(() => {
+    if (isOpen) {
+      api.get("/clients").then(async (res) => {
+        if (res.ok) {
+          const data = await res.json();
+          setClients(data.data);
+        }
+      });
+    }
+  }, [isOpen]);
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log("Project created:", formData);
-    onClose();
+    setLoading(true);
+    try {
+      const res = await api.post("/projects", formData);
+      if (res.ok) {
+        if (onCreate) onCreate();
+        onClose();
+        setFormData({ name: "", clientId: "", description: "", startDate: "", deadline: "" });
+      }
+    } catch (err) {
+      console.error("Project creation failed:", err);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -90,64 +117,54 @@ export function CreateProjectModal({
         <div className="grid md:grid-cols-2 gap-4">
           <div className="grid gap-2">
             <label className="text-sm font-semibold text-white">Client *</label>
-            <input
-              type="text"
+            <select
               required
               className="bg-black/50 border border-line text-white px-3 py-2 rounded-sm focus:border-brand focus:outline-none transition-colors"
-              placeholder="Client name"
-              value={formData.client}
+              value={formData.clientId}
               onChange={(e) =>
-                setFormData({ ...formData, client: e.target.value })
+                setFormData({ ...formData, clientId: e.target.value })
               }
-            />
+            >
+              <option value="">Select Client</option>
+              {clients.map(c => <option key={c.id} value={c.id}>{c.companyName}</option>)}
+            </select>
           </div>
 
           <div className="grid gap-2">
-            <label htmlFor="filter-category" className="text-sm font-semibold text-white">Category *</label>
-            <select
-              id="filter-category"
-              title="Select category"
-              required
+            <label className="text-sm font-semibold text-white">Description</label>
+            <input
+              type="text"
               className="bg-black/50 border border-line text-white px-3 py-2 rounded-sm focus:border-brand focus:outline-none transition-colors"
-              value={formData.category}
+              placeholder="Project description"
+              value={formData.description}
               onChange={(e) =>
-                setFormData({ ...formData, category: e.target.value })
+                setFormData({ ...formData, description: e.target.value })
               }
-            >
-              <option value="">Select category</option>
-              <option value="Web Development">Web Development</option>
-              <option value="Infrastructure">Infrastructure</option>
-              <option value="AI/ML">AI/ML</option>
-              <option value="Security">Security</option>
-            </select>
+            />
           </div>
         </div>
 
         <div className="grid md:grid-cols-2 gap-4">
           <div className="grid gap-2">
-            <label className="text-sm font-semibold text-white">Budget *</label>
+            <label className="text-sm font-semibold text-white">Start Date</label>
             <input
-              type="text"
-              required
+              type="date"
               className="bg-black/50 border border-line text-white px-3 py-2 rounded-sm focus:border-brand focus:outline-none transition-colors"
-              placeholder="$50,000"
-              value={formData.budget}
+              value={formData.startDate}
               onChange={(e) =>
-                setFormData({ ...formData, budget: e.target.value })
+                setFormData({ ...formData, startDate: e.target.value })
               }
             />
           </div>
 
           <div className="grid gap-2">
-            <label className="text-sm font-semibold text-white">Timeline *</label>
+            <label className="text-sm font-semibold text-white">Deadline</label>
             <input
-              type="text"
-              required
+              type="date"
               className="bg-black/50 border border-line text-white px-3 py-2 rounded-sm focus:border-brand focus:outline-none transition-colors"
-              placeholder="3 Months"
-              value={formData.timeline}
+              value={formData.deadline}
               onChange={(e) =>
-                setFormData({ ...formData, timeline: e.target.value })
+                setFormData({ ...formData, deadline: e.target.value })
               }
             />
           </div>
@@ -163,9 +180,10 @@ export function CreateProjectModal({
           </button>
           <button
             type="submit"
-            className="flex-1 px-4 py-2 bg-brand text-white font-semibold hover:bg-[#ff343a] transition-colors rounded-sm"
+            disabled={loading}
+            className="flex-1 px-4 py-2 bg-brand text-white font-semibold hover:bg-[#ff343a] transition-colors rounded-sm disabled:opacity-50"
           >
-            Create Project
+            {loading ? "Initializing..." : "Create Project"}
           </button>
         </div>
       </form>
@@ -737,19 +755,17 @@ export function CreateTaskModal({
     dueDate: "",
   });
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (isOpen) {
       const fetchData = async () => {
         try {
-          const token = localStorage.getItem("access_token");
-          const headers = { Authorization: `Bearer ${token}` };
           const [pRes, uRes] = await Promise.all([
-            fetch("/api/projects", { headers }),
-            fetch("/api/users", { headers }),
+            api.get("/projects"),
+            api.get("/users"),
           ]);
           if (pRes.ok && uRes.ok) {
-            setProjects(await pRes.json());
-            setUsers(await uRes.json());
+            setProjects((await pRes.json()).data);
+            setUsers((await uRes.json()).data);
           }
         } catch (err) {
           console.error("Failed to fetch task form data:", err);
@@ -763,17 +779,9 @@ export function CreateTaskModal({
     e.preventDefault();
     setLoading(true);
     try {
-      const token = localStorage.getItem("access_token");
-      const res = await fetch("/api/tasks", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify(formData),
-      });
+      const res = await api.post("/tasks", formData);
       if (res.ok) {
-        const newTask = await res.json();
+        const newTask = (await res.json()).data;
         if (onCreate) onCreate(newTask);
         onClose();
         setFormData({
@@ -905,12 +913,9 @@ export function TaskDetailsModal({
   const fetchComments = async () => {
     if (!task?.id) return;
     try {
-      const token = localStorage.getItem("access_token");
-      const res = await fetch(`/api/tasks/${task.id}/comments`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const res = await api.get(`/tasks/${task.id}/comments`);
       if (res.ok) {
-        setComments(await res.json());
+        setComments((await res.json()).data);
       }
     } catch (err) {
       console.error("Failed to fetch comments:", err);
@@ -928,15 +933,7 @@ export function TaskDetailsModal({
     if (!newComment.trim()) return;
     setLoading(true);
     try {
-      const token = localStorage.getItem("access_token");
-      const res = await fetch(`/api/tasks/${task.id}/comments`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({ content: newComment }),
-      });
+      const res = await api.post(`/tasks/${task.id}/comments`, { content: newComment });
       if (res.ok) {
         setNewComment("");
         fetchComments();
@@ -1066,17 +1063,9 @@ export function CreateClientModal({
     e.preventDefault();
     setLoading(true);
     try {
-      const token = localStorage.getItem("access_token");
-      const res = await fetch("/api/clients", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify(formData),
-      });
+      const res = await api.post("/clients", formData);
       if (res.ok) {
-        const newClient = await res.json();
+        const newClient = (await res.json()).data;
         if (onCreate) onCreate(newClient);
         onClose();
         setFormData({
