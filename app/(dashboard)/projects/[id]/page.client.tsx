@@ -45,10 +45,21 @@ interface DeliverableData {
   description: string;
 }
 
+interface RevisionData {
+  id: string;
+  feedback: string;
+  status: string;
+  createdAt: string;
+  createdBy: {
+    fullName: string;
+  };
+}
+
 export default function ProjectDetailClient({ projectId }: { projectId: string }) {
   const [project, setProject] = useState<ProjectData | null>(null);
   const [tasks, setTasks] = useState<TaskData[]>([]);
   const [deliverables, setDeliverables] = useState<DeliverableData[]>([]);
+  const [revisions, setRevisions] = useState<RevisionData[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
@@ -65,6 +76,18 @@ export default function ProjectDetailClient({ projectId }: { projectId: string }
       }
     } catch (err) {
       console.error("Failed to fetch deliverables:", err);
+    }
+  };
+
+  const fetchRevisions = async () => {
+    try {
+      const res = await api.get(`/admin/projects/${projectId}/revisions`);
+      if (res.ok) {
+        const json = await res.json();
+        setRevisions(json.data || []);
+      }
+    } catch (err) {
+      console.error("Failed to fetch revisions:", err);
     }
   };
 
@@ -86,7 +109,10 @@ export default function ProjectDetailClient({ projectId }: { projectId: string }
           setTasks(tasksJson.data || []);
         }
 
-        await fetchDeliverables();
+        await Promise.all([
+          fetchDeliverables(),
+          fetchRevisions()
+        ]);
       } catch (err: any) {
         setError(err.message);
       } finally {
@@ -274,6 +300,35 @@ export default function ProjectDetailClient({ projectId }: { projectId: string }
             }} 
             onDelete={(id) => handleDeleteFile(id)} 
           />
+        </Section>
+
+        {/* Revision Log Section */}
+        <Section title="Revision History" eyebrow="Client Feedback">
+          <div className="divide-y divide-white/5">
+            {revisions.map((rev) => (
+              <div key={rev.id} className="p-6 hover:bg-white/[0.01] transition-colors">
+                <div className="flex items-center justify-between gap-4">
+                  <div className="flex items-center gap-3">
+                    <div className="h-2 w-2 rounded-full bg-brand" />
+                    <span className="text-[10px] font-black uppercase tracking-widest text-white">Revision Request</span>
+                  </div>
+                  <span className={`text-[10px] font-black uppercase tracking-[0.2em] px-2 py-1 border ${rev.status === 'APPROVED' ? 'border-success text-success' : rev.status === 'REJECTED' ? 'border-brand text-brand' : 'border-zinc-600 text-zinc-500'}`}>
+                    {rev.status}
+                  </span>
+                </div>
+                <p className="mt-4 text-lg leading-8 text-zinc-300 italic">"{rev.feedback}"</p>
+                <div className="mt-6 flex items-center justify-between text-[10px] font-bold uppercase tracking-widest text-mute">
+                  <span>Requested by: {rev.createdBy?.fullName || "Client Node"}</span>
+                  <span className="font-mono">{new Date(rev.createdAt).toLocaleDateString()}</span>
+                </div>
+              </div>
+            ))}
+            {revisions.length === 0 && (
+              <div className="py-12 text-center">
+                <p className="text-sm font-bold uppercase tracking-[0.2em] text-mute opacity-40">No revision signals detected.</p>
+              </div>
+            )}
+          </div>
         </Section>
 
         <div className="grid gap-4 xl:grid-cols-[minmax(0,1.6fr)_340px]">
