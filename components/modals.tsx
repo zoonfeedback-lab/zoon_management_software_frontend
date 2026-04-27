@@ -1538,6 +1538,17 @@ export function EditEmployeeModal({
 
         <div className="flex gap-4 pt-4 border-t border-white/5">
           <button type="button" onClick={onClose} className="flex-1 px-4 py-3 border border-white/10 text-mute font-bold uppercase tracking-widest text-xs hover:bg-white/5 rounded-lg">Cancel</button>
+          <button 
+            type="button" 
+            onClick={() => {
+              const url = `${window.location.origin}/auth/login?email=${employee.email}`;
+              navigator.clipboard.writeText(url);
+              alert("Portal access link copied to clipboard.");
+            }}
+            className="flex-1 px-4 py-3 border border-brand/30 text-brand font-bold uppercase tracking-widest text-xs hover:bg-brand/5 rounded-lg"
+          >
+            Copy Portal Link
+          </button>
           <button type="submit" disabled={loading} className="flex-1 px-4 py-3 bg-brand text-white font-bold uppercase tracking-widest text-xs hover:bg-[#ff343a] rounded-lg shadow-lg disabled:opacity-50">
             {loading ? "Updating..." : "Synchronize Node"}
           </button>
