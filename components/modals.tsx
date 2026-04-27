@@ -810,7 +810,7 @@ export function CreateTaskModal({
         try {
           const [pRes, uRes] = await Promise.all([
             api.get("/projects"),
-            api.get("/users"),
+            api.get("/employees"),
           ]);
           if (pRes.ok && uRes.ok) {
             setProjects((await pRes.json()).data || []);
@@ -1235,6 +1235,311 @@ export function CreateClientModal({
             className="flex-1 px-4 py-3.5 bg-brand text-white font-bold uppercase tracking-widest text-[10px] hover:bg-[#ff343a] transition-colors rounded-lg shadow-[0_4px_14px_rgba(255,32,38,0.3)] disabled:opacity-50"
           >
             {loading ? "Registering..." : "Authorize Partner"}
+          </button>
+        </div>
+      </form>
+    </Modal>
+  );
+}
+
+export function CreateEmployeeModal({
+  isOpen,
+  onClose,
+  onSuccess,
+}: {
+  isOpen: boolean;
+  onClose: () => void;
+  onSuccess?: () => void;
+}) {
+  const [loading, setLoading] = useState(false);
+  const [formData, setFormData] = useState({
+    email: "",
+    password: "Admin@123",
+    fullName: "",
+    role: "INTERNEE",
+    phone: "",
+    jobTitle: "",
+    department: "Engineering",
+    experienceLevel: "Junior",
+    skills: "",
+    availabilityStatus: "AVAILABLE",
+  });
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    try {
+      const payload = {
+        ...formData,
+        skills: formData.skills.split(",").map(s => s.trim()).filter(s => s),
+      };
+      const res = await api.post("/employees", payload);
+      if (res.ok) {
+        if (onSuccess) onSuccess();
+        onClose();
+        setFormData({
+          email: "",
+          password: "Admin@123",
+          fullName: "",
+          role: "INTERNEE",
+          phone: "",
+          jobTitle: "",
+          department: "Engineering",
+          experienceLevel: "Junior",
+          skills: "",
+          availabilityStatus: "AVAILABLE",
+        });
+      }
+    } catch (err) {
+      console.error("Employee creation failed:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <Modal isOpen={isOpen} onClose={onClose} title="Initialize Personnel Node" size="lg">
+      <form onSubmit={handleSubmit} className="grid gap-5">
+        <div className="grid md:grid-cols-2 gap-4">
+          <div className="grid gap-2">
+            <label className="text-[10px] font-black uppercase tracking-widest text-mute">Full Name</label>
+            <input
+              required
+              className="bg-black/40 border border-line text-white px-4 py-3 rounded-lg focus:border-brand outline-none"
+              value={formData.fullName}
+              onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
+            />
+          </div>
+          <div className="grid gap-2">
+            <label className="text-[10px] font-black uppercase tracking-widest text-mute">Email Address</label>
+            <input
+              required
+              type="email"
+              className="bg-black/40 border border-line text-white px-4 py-3 rounded-lg focus:border-brand outline-none"
+              value={formData.email}
+              onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+            />
+          </div>
+        </div>
+
+        <div className="grid md:grid-cols-2 gap-4">
+          <div className="grid gap-2">
+            <label className="text-[10px] font-black uppercase tracking-widest text-mute">Clearance Role</label>
+            <select
+              className="bg-black/40 border border-line text-white px-4 py-3 rounded-lg focus:border-brand outline-none"
+              value={formData.role}
+              onChange={(e) => setFormData({ ...formData, role: e.target.value })}
+            >
+              <option value="INTERNEE">INTERNEE</option>
+              <option value="CORE_TEAM">CORE TEAM</option>
+              <option value="ADMIN">ADMINISTRATOR</option>
+            </select>
+          </div>
+          <div className="grid gap-2">
+            <label className="text-[10px] font-black uppercase tracking-widest text-mute">Job Title</label>
+            <input
+              className="bg-black/40 border border-line text-white px-4 py-3 rounded-lg focus:border-brand outline-none"
+              placeholder="e.g., Software Engineer"
+              value={formData.jobTitle}
+              onChange={(e) => setFormData({ ...formData, jobTitle: e.target.value })}
+            />
+          </div>
+        </div>
+
+        <div className="grid md:grid-cols-3 gap-4">
+          <div className="grid gap-2">
+            <label className="text-[10px] font-black uppercase tracking-widest text-mute">Department</label>
+            <input
+              className="bg-black/40 border border-line text-white px-4 py-3 rounded-lg focus:border-brand outline-none"
+              value={formData.department}
+              onChange={(e) => setFormData({ ...formData, department: e.target.value })}
+            />
+          </div>
+          <div className="grid gap-2">
+            <label className="text-[10px] font-black uppercase tracking-widest text-mute">Experience Level</label>
+            <select
+              className="bg-black/40 border border-line text-white px-4 py-3 rounded-lg focus:border-brand outline-none"
+              value={formData.experienceLevel}
+              onChange={(e) => setFormData({ ...formData, experienceLevel: e.target.value })}
+            >
+              <option value="Junior">Junior</option>
+              <option value="Mid-Level">Mid-Level</option>
+              <option value="Senior">Senior</option>
+              <option value="Lead">Lead</option>
+            </select>
+          </div>
+          <div className="grid gap-2">
+            <label className="text-[10px] font-black uppercase tracking-widest text-mute">Availability</label>
+            <select
+              className="bg-black/40 border border-line text-white px-4 py-3 rounded-lg focus:border-brand outline-none"
+              value={formData.availabilityStatus}
+              onChange={(e) => setFormData({ ...formData, availabilityStatus: e.target.value })}
+            >
+              <option value="AVAILABLE">AVAILABLE</option>
+              <option value="BUSY">BUSY</option>
+              <option value="ON_LEAVE">ON LEAVE</option>
+            </select>
+          </div>
+        </div>
+
+        <div className="grid gap-2">
+          <label className="text-[10px] font-black uppercase tracking-widest text-mute">Skills (Comma separated)</label>
+          <input
+            className="bg-black/40 border border-line text-white px-4 py-3 rounded-lg focus:border-brand outline-none"
+            placeholder="nestjs, prisma, react, nextjs"
+            value={formData.skills}
+            onChange={(e) => setFormData({ ...formData, skills: e.target.value })}
+          />
+        </div>
+
+        <div className="flex gap-4 pt-4 border-t border-white/5">
+          <button type="button" onClick={onClose} className="flex-1 px-4 py-3 border border-white/10 text-mute font-bold uppercase tracking-widest text-xs hover:bg-white/5 rounded-lg">Cancel</button>
+          <button type="submit" disabled={loading} className="flex-1 px-4 py-3 bg-brand text-white font-bold uppercase tracking-widest text-xs hover:bg-[#ff343a] rounded-lg shadow-lg disabled:opacity-50">
+            {loading ? "Initializing..." : "Finalize Node"}
+          </button>
+        </div>
+      </form>
+    </Modal>
+  );
+}
+
+export function EditEmployeeModal({
+  isOpen,
+  onClose,
+  employee,
+  onSuccess,
+}: {
+  isOpen: boolean;
+  onClose: () => void;
+  employee: any;
+  onSuccess?: () => void;
+}) {
+  const [loading, setLoading] = useState(false);
+  const [formData, setFormData] = useState({
+    fullName: employee.fullName,
+    phone: employee.phone || "",
+    jobTitle: employee.jobTitle || "",
+    department: employee.department || "",
+    experienceLevel: employee.experienceLevel || "Junior",
+    skills: Array.isArray(employee.skills) ? employee.skills.join(", ") : "",
+    availabilityStatus: employee.availabilityStatus || "AVAILABLE",
+    isActive: employee.isActive,
+  });
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    try {
+      const payload = {
+        ...formData,
+        skills: formData.skills.split(",").map(s => s.trim()).filter(s => s),
+      };
+      const res = await api.patch(`/employees/${employee.id}`, payload);
+      if (res.ok) {
+        if (onSuccess) onSuccess();
+        onClose();
+      }
+    } catch (err) {
+      console.error("Employee update failed:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <Modal isOpen={isOpen} onClose={onClose} title="Update Personnel Metadata" size="lg">
+      <form onSubmit={handleSubmit} className="grid gap-5">
+        <div className="grid md:grid-cols-2 gap-4">
+          <div className="grid gap-2">
+            <label className="text-[10px] font-black uppercase tracking-widest text-mute">Full Name</label>
+            <input
+              required
+              className="bg-black/40 border border-line text-white px-4 py-3 rounded-lg focus:border-brand outline-none"
+              value={formData.fullName}
+              onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
+            />
+          </div>
+          <div className="grid gap-2">
+            <label className="text-[10px] font-black uppercase tracking-widest text-mute">Phone</label>
+            <input
+              className="bg-black/40 border border-line text-white px-4 py-3 rounded-lg focus:border-brand outline-none"
+              value={formData.phone}
+              onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+            />
+          </div>
+        </div>
+
+        <div className="grid md:grid-cols-2 gap-4">
+          <div className="grid gap-2">
+            <label className="text-[10px] font-black uppercase tracking-widest text-mute">Job Title</label>
+            <input
+              className="bg-black/40 border border-line text-white px-4 py-3 rounded-lg focus:border-brand outline-none"
+              value={formData.jobTitle}
+              onChange={(e) => setFormData({ ...formData, jobTitle: e.target.value })}
+            />
+          </div>
+          <div className="grid gap-2">
+            <label className="text-[10px] font-black uppercase tracking-widest text-mute">Department</label>
+            <input
+              className="bg-black/40 border border-line text-white px-4 py-3 rounded-lg focus:border-brand outline-none"
+              value={formData.department}
+              onChange={(e) => setFormData({ ...formData, department: e.target.value })}
+            />
+          </div>
+        </div>
+
+        <div className="grid md:grid-cols-3 gap-4">
+          <div className="grid gap-2">
+            <label className="text-[10px] font-black uppercase tracking-widest text-mute">Status</label>
+            <select
+              className="bg-black/40 border border-line text-white px-4 py-3 rounded-lg focus:border-brand outline-none"
+              value={formData.isActive ? "true" : "false"}
+              onChange={(e) => setFormData({ ...formData, isActive: e.target.value === "true" })}
+            >
+              <option value="true">Active Node</option>
+              <option value="false">Suspended</option>
+            </select>
+          </div>
+          <div className="grid gap-2">
+            <label className="text-[10px] font-black uppercase tracking-widest text-mute">Experience Level</label>
+            <select
+              className="bg-black/40 border border-line text-white px-4 py-3 rounded-lg focus:border-brand outline-none"
+              value={formData.experienceLevel}
+              onChange={(e) => setFormData({ ...formData, experienceLevel: e.target.value })}
+            >
+              <option value="Junior">Junior</option>
+              <option value="Mid-Level">Mid-Level</option>
+              <option value="Senior">Senior</option>
+              <option value="Lead">Lead</option>
+            </select>
+          </div>
+          <div className="grid gap-2">
+            <label className="text-[10px] font-black uppercase tracking-widest text-mute">Availability</label>
+            <select
+              className="bg-black/40 border border-line text-white px-4 py-3 rounded-lg focus:border-brand outline-none"
+              value={formData.availabilityStatus}
+              onChange={(e) => setFormData({ ...formData, availabilityStatus: e.target.value })}
+            >
+              <option value="AVAILABLE">AVAILABLE</option>
+              <option value="BUSY">BUSY</option>
+              <option value="ON_LEAVE">ON LEAVE</option>
+            </select>
+          </div>
+        </div>
+
+        <div className="grid gap-2">
+          <label className="text-[10px] font-black uppercase tracking-widest text-mute">Skills (Comma separated)</label>
+          <input
+            className="bg-black/40 border border-line text-white px-4 py-3 rounded-lg focus:border-brand outline-none"
+            value={formData.skills}
+            onChange={(e) => setFormData({ ...formData, skills: e.target.value })}
+          />
+        </div>
+
+        <div className="flex gap-4 pt-4 border-t border-white/5">
+          <button type="button" onClick={onClose} className="flex-1 px-4 py-3 border border-white/10 text-mute font-bold uppercase tracking-widest text-xs hover:bg-white/5 rounded-lg">Cancel</button>
+          <button type="submit" disabled={loading} className="flex-1 px-4 py-3 bg-brand text-white font-bold uppercase tracking-widest text-xs hover:bg-[#ff343a] rounded-lg shadow-lg disabled:opacity-50">
+            {loading ? "Updating..." : "Synchronize Node"}
           </button>
         </div>
       </form>

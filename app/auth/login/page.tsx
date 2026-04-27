@@ -27,7 +27,14 @@ export default function LoginPage() {
       // Store the token
       localStorage.setItem("access_token", data.data.accessToken);
       
-      router.push("/overview");
+      const role = data.data.user.role.key;
+      if (role === "ADMIN") {
+        router.push("/overview");
+      } else if (role === "CLIENT") {
+        router.push("/client/dashboard");
+      } else {
+        router.push("/portal/dashboard");
+      }
     } catch (err: any) {
       setError(err.message);
     } finally {

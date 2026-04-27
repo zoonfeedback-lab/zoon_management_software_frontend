@@ -4,7 +4,7 @@ export const primaryNav: NavItem[] = [
   { href: "/overview", label: "Dashboard", icon: "grid" },
   { href: "/projects", label: "Projects", icon: "folder" },
   { href: "/tasks", label: "Tasks", icon: "task" },
-  { href: "/users", label: "Team", icon: "users" },
+  { href: "/employees", label: "Team", icon: "users" },
   { href: "/clients", label: "Clients", icon: "users" },
   { href: "/reports", label: "Reports", icon: "list" },
   { href: "/settings", label: "Settings", icon: "settings" },

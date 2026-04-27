@@ -11,7 +11,7 @@ interface OverviewData {
   projects: any[];
   metrics: {
     totalProjects: number;
-    totalUsers: number;
+    totalEmployees: number;
     totalClients: number;
     activeTasks: number;
   };
@@ -26,14 +26,14 @@ export default function OverviewClient() {
     try {
       const [pRes, uRes, cRes, tRes] = await Promise.all([
         api.get("/projects"),
-        api.get("/users"),
+        api.get("/employees"),
         api.get("/clients"),
         api.get("/tasks"),
       ]);
 
       if (pRes.ok && uRes.ok && cRes.ok && tRes.ok) {
         const projects = (await pRes.json()).data;
-        const users = (await uRes.json()).data;
+        const employees = (await uRes.json()).data;
         const clients = (await cRes.json()).data;
         const tasks = (await tRes.json()).data;
 
@@ -41,7 +41,7 @@ export default function OverviewClient() {
           projects,
           metrics: {
             totalProjects: projects.length,
-            totalUsers: users.length,
+            totalEmployees: employees.length,
             totalClients: clients.length,
             activeTasks: tasks.filter((t: any) => t.status !== "DONE").length,
           }
@@ -66,7 +66,7 @@ export default function OverviewClient() {
     { label: "Total Projects", value: data?.metrics.totalProjects || 0, note: "Authorized Programs", accent: "red" },
     { label: "Active Nodes", value: data?.metrics.totalClients || 0, note: "Partner Connections", accent: "red" },
     { label: "Mission Queue", value: data?.metrics.activeTasks || 0, note: "Pending Execution", accent: "white" },
-    { label: "Team Members", value: data?.metrics.totalUsers || 0, note: "Verified Personnel", accent: "red" },
+    { label: "Team Members", value: data?.metrics.totalEmployees || 0, note: "Verified Personnel", accent: "red" },
   ];
 
   return (

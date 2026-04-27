@@ -10,7 +10,7 @@ interface Client {
   companyName: string;
 }
 
-interface User {
+interface Employee {
   id: string;
   fullName: string;
 }
@@ -18,7 +18,7 @@ interface User {
 export default function CreateProjectPage() {
   const router = useRouter();
   const [clients, setClients] = useState<Client[]>([]);
-  const [users, setUsers] = useState<User[]>([]);
+  const [employees, setEmployees] = useState<Employee[]>([]);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
@@ -38,22 +38,22 @@ export default function CreateProjectPage() {
         const token = localStorage.getItem("access_token");
         const headers = { Authorization: `Bearer ${token}` };
 
-        const [clientsRes, usersRes] = await Promise.all([
+        const [clientsRes, employeesRes] = await Promise.all([
           fetch("/api/clients", { headers }),
-          fetch("/api/users", { headers }),
+          fetch("/api/employees", { headers }),
         ]);
 
-        if (!clientsRes.ok || !usersRes.ok) {
+        if (!clientsRes.ok || !employeesRes.ok) {
           throw new Error("Failed to fetch initial data");
         }
 
-        const [clientsData, usersData] = await Promise.all([
+        const [clientsData, employeesData] = await Promise.all([
           clientsRes.json(),
-          usersRes.json(),
+          employeesRes.json(),
         ]);
 
         setClients(clientsData.data || []);
-        setUsers(usersData.data || []);
+        setEmployees(employeesData.data || []);
       } catch (err: any) {
         setError(err.message);
       } finally {
@@ -206,15 +206,15 @@ export default function CreateProjectPage() {
           <div className="grid gap-2">
             <span className="text-[10px] font-black uppercase tracking-[0.2em] text-[#9897a1]">Engineering Squad</span>
             <div className="grid gap-2 max-h-48 overflow-y-auto rounded-lg border border-white/5 bg-[#0b0b0d] p-4">
-               {users.map(user => (
-                 <label key={user.id} className="flex items-center gap-3 cursor-pointer group">
+               {employees.map(emp => (
+                 <label key={emp.id} className="flex items-center gap-3 cursor-pointer group">
                     <input 
                       type="checkbox" 
-                      checked={formData.memberIds.includes(user.id)}
-                      onChange={() => handleMemberToggle(user.id)}
+                      checked={formData.memberIds.includes(emp.id)}
+                      onChange={() => handleMemberToggle(emp.id)}
                       className="h-4 w-4 rounded border-white/10 bg-white/5 text-brand accent-brand"
                     />
-                    <span className="text-xs text-[#9897a1] group-hover:text-white transition-colors">{user.fullName}</span>
+                    <span className="text-xs text-[#9897a1] group-hover:text-white transition-colors">{emp.fullName}</span>
                  </label>
                ))}
             </div>
