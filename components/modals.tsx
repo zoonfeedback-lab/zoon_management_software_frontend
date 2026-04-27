@@ -579,81 +579,129 @@ export function SearchFilterModal({
 export function FileUploadModal({
   isOpen,
   onClose,
+  projectId,
+  onSuccess,
 }: {
   isOpen: boolean;
   onClose: () => void;
+  projectId: string;
+  onSuccess?: () => void;
 }) {
-  const [files, setFiles] = useState<File[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [formData, setFormData] = useState({
+    fileName: "",
+    fileUrl: "",
+    fileType: "application/pdf",
+    fileSize: 0,
+    description: "",
+  });
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files) {
-      setFiles(Array.from(e.target.files));
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    try {
+      const res = await api.post(`/projects/${projectId}/deliverables`, {
+        ...formData,
+        projectId,
+      });
+      if (res.ok) {
+        if (onSuccess) onSuccess();
+        onClose();
+        setFormData({
+          fileName: "",
+          fileUrl: "",
+          fileType: "application/pdf",
+          fileSize: 0,
+          description: "",
+        });
+      }
+    } catch (err) {
+      console.error("Failed to create deliverable:", err);
+    } finally {
+      setLoading(false);
     }
   };
 
-  const handleUpload = () => {
-    console.log("Uploading files:", files);
-    setFiles([]);
-    onClose();
-  };
-
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title="Upload Files" size="md">
-      <div className="grid gap-5">
-        <div className="border border-dashed border-line p-8 rounded-sm text-center hover:border-brand transition-colors group cursor-pointer">
+    <Modal isOpen={isOpen} onClose={onClose} title="Register Deliverable" size="md">
+      <form onSubmit={handleSubmit} className="grid gap-5">
+        <div className="grid gap-2">
+          <label className="text-xs font-black uppercase tracking-widest text-[#9897a1]">File Name</label>
           <input
-            type="file"
-            multiple
-            className="hidden"
-            id="file-upload"
-            onChange={handleFileChange}
-            accept=".pdf,.zip,.doc,.docx"
+            required
+            type="text"
+            className="bg-[#0b0b0d] border border-white/10 text-white px-4 py-3 rounded-lg focus:border-brand/30 outline-none"
+            placeholder="e.g., architectural-blueprint-v1.pdf"
+            value={formData.fileName}
+            onChange={(e) => setFormData({ ...formData, fileName: e.target.value })}
           />
-          <label
-            htmlFor="file-upload"
-            className="cursor-pointer block"
-          >
-            <p className="text-2xl mb-2">📤</p>
-            <p className="text-white font-semibold">Drop files here or click to select</p>
-            <p className="text-sm text-zinc-500 mt-1">Max 50MB per file. Supported: PDF, ZIP, DOCX</p>
-          </label>
         </div>
 
-        {files.length > 0 && (
-          <div className="space-y-2">
-            <p className="text-sm font-semibold text-white">Files to upload:</p>
-            <div className="space-y-1 max-h-48 overflow-y-auto">
-              {files.map((file, idx) => (
-                <div
-                  key={idx}
-                  className="flex items-center justify-between bg-zinc-900/50 p-2 rounded-sm text-sm"
-                >
-                  <span className="text-white truncate">{file.name}</span>
-                  <span className="text-zinc-500">
-                    {(file.size / 1024 / 1024).toFixed(2)} MB
-                  </span>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
+        <div className="grid gap-2">
+          <label className="text-xs font-black uppercase tracking-widest text-[#9897a1]">File URL (Public Access)</label>
+          <input
+            required
+            type="url"
+            className="bg-[#0b0b0d] border border-white/10 text-white px-4 py-3 rounded-lg focus:border-brand/30 outline-none"
+            placeholder="https://cdn.zoonlabs.io/..."
+            value={formData.fileUrl}
+            onChange={(e) => setFormData({ ...formData, fileUrl: e.target.value })}
+          />
+        </div>
 
-        <div className="flex gap-3 pt-4 border-t border-line">
+        <div className="grid md:grid-cols-2 gap-4">
+          <div className="grid gap-2">
+            <label className="text-xs font-black uppercase tracking-widest text-[#9897a1]">File Type</label>
+            <select
+              className="bg-[#0b0b0d] border border-white/10 text-white px-4 py-3 rounded-lg focus:border-brand/30 outline-none"
+              value={formData.fileType}
+              onChange={(e) => setFormData({ ...formData, fileType: e.target.value })}
+            >
+              <option value="application/pdf">PDF</option>
+              <option value="application/zip">ZIP Archive</option>
+              <option value="image/png">PNG Image</option>
+              <option value="application/octet-stream">Binary Data</option>
+            </select>
+          </div>
+          <div className="grid gap-2">
+            <label className="text-xs font-black uppercase tracking-widest text-[#9897a1]">Size (Bytes)</label>
+            <input
+              type="number"
+              className="bg-[#0b0b0d] border border-white/10 text-white px-4 py-3 rounded-lg focus:border-brand/30 outline-none"
+              value={formData.fileSize}
+              onChange={(e) => setFormData({ ...formData, fileSize: parseInt(e.target.value) })}
+            />
+          </div>
+        </div>
+
+        <div className="grid gap-2">
+          <label className="text-xs font-black uppercase tracking-widest text-[#9897a1]">Description</label>
+          <textarea
+            rows={3}
+            className="bg-[#0b0b0d] border border-white/10 text-white px-4 py-3 rounded-lg focus:border-brand/30 outline-none resize-none"
+            placeholder="Technical specs, handover notes, etc..."
+            value={formData.description}
+            onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+          />
+        </div>
+
+        <div className="flex gap-3 pt-4 border-t border-white/5">
           <button
+            type="button"
             onClick={onClose}
-            className="flex-1 px-4 py-2 border border-line text-white font-semibold bg-transparent hover:bg-white/5 transition-colors rounded-sm"
+            className="flex-1 px-4 py-3 border border-white/10 text-[#9897a1] font-bold uppercase tracking-widest text-[10px] hover:bg-white/5 rounded-lg transition-all"
           >
             Cancel
           </button>
           <button
-            onClick={handleUpload}
-            disabled={files.length === 0}
-            className="flex-1 px-4 py-2 bg-brand text-white font-semibold hover:bg-[#ff343a] transition-colors rounded-sm disabled:opacity-50 disabled:cursor-not-allowed"
+            type="submit"
+            disabled={loading}
+            className="flex-1 px-4 py-3 bg-brand text-white font-bold uppercase tracking-widest text-[10px] hover:bg-[#ff343a] rounded-lg shadow-[0_4px_14px_rgba(255,32,38,0.3)] disabled:opacity-50 transition-all"
           >
-            Upload {files.length > 0 ? `(${files.length})` : ""}
+            {loading ? "Registering..." : "Finalize Asset"}
           </button>
         </div>
-      </div>
+      </form>
     </Modal>
   );
 }

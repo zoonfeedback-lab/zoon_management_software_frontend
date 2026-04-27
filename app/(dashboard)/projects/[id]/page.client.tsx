@@ -36,15 +36,37 @@ interface TaskData {
   };
 }
 
+interface DeliverableData {
+  id: string;
+  fileName: string;
+  fileUrl: string;
+  fileType: string;
+  fileSize: number;
+  description: string;
+}
+
 export default function ProjectDetailClient({ projectId }: { projectId: string }) {
   const [project, setProject] = useState<ProjectData | null>(null);
   const [tasks, setTasks] = useState<TaskData[]>([]);
+  const [deliverables, setDeliverables] = useState<DeliverableData[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isDeployModalOpen, setIsDeployModalOpen] = useState(false);
   const [isFileUploadOpen, setIsFileUploadOpen] = useState(false);
+
+  const fetchDeliverables = async () => {
+    try {
+      const res = await api.get(`/projects/${projectId}/deliverables`);
+      if (res.ok) {
+        const json = await res.json();
+        setDeliverables(json.data || []);
+      }
+    } catch (err) {
+      console.error("Failed to fetch deliverables:", err);
+    }
+  };
 
   useEffect(() => {
     const fetchProjectData = async () => {
@@ -63,6 +85,8 @@ export default function ProjectDetailClient({ projectId }: { projectId: string }
           const tasksJson = await tasksRes.json();
           setTasks(tasksJson.data || []);
         }
+
+        await fetchDeliverables();
       } catch (err: any) {
         setError(err.message);
       } finally {
@@ -96,13 +120,20 @@ export default function ProjectDetailClient({ projectId }: { projectId: string }
     { title: "Final Delivery", description: "UAT, deployment, and final client hand-off.", state: "Pending", date: "Est. Q4" },
   ];
 
-  const handleDownloadFile = (fileName: string) => {
-    console.log(`Downloading file: ${fileName}`);
+  const handleDownloadFile = (url: string) => {
+    window.open(url, "_blank");
   };
 
-  const handleDeleteFile = (fileName: string) => {
-    if (confirm(`Delete ${fileName}?`)) {
-      alert(`${fileName} deleted (simulated).`);
+  const handleDeleteFile = async (id: string) => {
+    if (confirm(`Are you sure you want to delete this deliverable?`)) {
+      try {
+        const res = await api.delete(`/deliverables/${id}`);
+        if (res.ok) {
+          fetchDeliverables();
+        }
+      } catch (err) {
+        console.error("Failed to delete deliverable:", err);
+      }
     }
   };
 
@@ -217,6 +248,34 @@ export default function ProjectDetailClient({ projectId }: { projectId: string }
           </div>
         </Section>
 
+        <Section 
+          title="Deliverables Archive" 
+          eyebrow="Asset Management"
+          action="Register Asset"
+          onAction={() => setIsFileUploadOpen(true)}
+        >
+          <button 
+            onClick={() => setIsFileUploadOpen(true)}
+            className="absolute top-4 right-4 md:top-5 md:right-5 text-brand hover:text-[#ff343a] transition-colors font-semibold uppercase text-xs tracking-widest"
+          >
+            + REGISTER
+          </button>
+          <FileList 
+            files={deliverables.map(d => ({
+              id: d.id,
+              name: d.fileName,
+              meta: d.description || "Project asset",
+              size: `${(d.fileSize / 1024 / 1024).toFixed(2)} MB`,
+              kind: d.fileType.includes("pdf") ? "PDF" : d.fileType.includes("zip") ? "ZIP" : "DOC",
+            }))} 
+            onDownload={(id) => {
+              const d = deliverables.find(f => f.id === id);
+              if (d) handleDownloadFile(d.fileUrl);
+            }} 
+            onDelete={(id) => handleDeleteFile(id)} 
+          />
+        </Section>
+
         <div className="grid gap-4 xl:grid-cols-[minmax(0,1.6fr)_340px]">
           <Section title="Project Milestones" eyebrow="Execution Timeline">
             <div className="grid">
@@ -273,6 +332,8 @@ export default function ProjectDetailClient({ projectId }: { projectId: string }
       <FileUploadModal
         isOpen={isFileUploadOpen}
         onClose={() => setIsFileUploadOpen(false)}
+        projectId={projectId}
+        onSuccess={fetchDeliverables}
       />
     </>
   );
