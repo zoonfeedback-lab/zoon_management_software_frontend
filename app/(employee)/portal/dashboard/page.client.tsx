@@ -56,10 +56,11 @@ export default function EmployeeDashboardClient() {
             <p className="mt-4 text-mute text-lg max-w-2xl font-medium uppercase tracking-widest leading-relaxed">Execute mission parameters, track task velocity, and maintain technical operationality.</p>
           </div>
           <div className="flex gap-4">
+             <a href="/portal/manager" className="px-6 py-2.5 border border-white/10 text-[10px] font-black uppercase tracking-widest text-mute hover:text-white hover:border-white transition-all">Manager View</a>
              <button onClick={() => {
                localStorage.removeItem('access_token');
                window.location.href = '/auth/login';
-             }} className="px-6 py-2.5 border border-white/10 text-[10px] font-black uppercase tracking-widest text-mute hover:text-white hover:border-white transition-all">Relinquish Node</button>
+             }} className="px-6 py-2.5 border border-[#ff2026]/50 bg-[#ff2026]/10 text-[10px] font-black uppercase tracking-widest text-[#ff2026] hover:bg-[#ff2026]/20 transition-all">Relinquish Node</button>
           </div>
         </header>
 
