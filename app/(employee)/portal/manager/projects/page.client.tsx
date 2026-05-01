@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { api } from "@/lib/api";
+import { GhostButton } from "@/components/ui";
 
 export default function MyProjectsClient() {
   const [project, setProject] = useState<any>(null);
@@ -186,10 +187,10 @@ export default function MyProjectsClient() {
                  </div>
               ))}
               
-              <button className="mt-2 w-full border border-white/20 text-white font-black text-[10px] tracking-widest uppercase py-4 hover:bg-white/5 transition-colors flex items-center justify-center gap-2">
+              <GhostButton className="mt-2 w-full flex items-center justify-center gap-2 py-4">
                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
                  ADD_NEW_OPERATIVE
-              </button>
+              </GhostButton>
            </div>
         </div>
 
