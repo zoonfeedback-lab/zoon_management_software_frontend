@@ -246,13 +246,18 @@ export function BarChart({ data }: BarChartProps) {
   );
 }
 
-export function Loader({ className = "" }: { className?: string }) {
+export function Loader({ className = "", text = "Synchronizing Project Nodes..." }: { className?: string; text?: string }) {
   return (
-    <div className={`flex flex-col items-center justify-center ${className}`}>
-      <div className="relative size-10">
+    <div className={`flex flex-col items-center justify-center gap-6 ${className}`}>
+      <div className="relative size-12">
         <div className="absolute inset-0 rounded-full border-2 border-brand/20" />
         <div className="absolute inset-0 animate-spin rounded-full border-2 border-brand border-t-transparent shadow-[0_0_15px_rgba(255,32,38,0.3)]" />
       </div>
+      {text && (
+        <p className="text-[10px] font-black uppercase tracking-[0.4em] text-[#ff2026] animate-pulse text-center">
+          {text}
+        </p>
+      )}
     </div>
   );
 }

@@ -1261,6 +1261,7 @@ export function CreateEmployeeModal({
   onSuccess?: () => void;
 }) {
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | string[]>("");
   const [formData, setFormData] = useState({
     email: "",
     password: "Admin@123",
@@ -1277,6 +1278,7 @@ export function CreateEmployeeModal({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
+    setError("");
     try {
       const payload = {
         ...formData,
@@ -1298,8 +1300,12 @@ export function CreateEmployeeModal({
           skills: "",
           availabilityStatus: "AVAILABLE",
         });
+      } else {
+        const json = await res.json();
+        setError(json.message || "Operation failed.");
       }
-    } catch (err) {
+    } catch (err: any) {
+      setError(err.message || "Personnel synchronization failed.");
       console.error("Employee creation failed:", err);
     } finally {
       setLoading(false);
@@ -1309,6 +1315,11 @@ export function CreateEmployeeModal({
   return (
     <Modal isOpen={isOpen} onClose={onClose} title="Initialize Personnel Node" size="lg">
       <form onSubmit={handleSubmit} className="grid gap-5">
+        {error && (
+          <div className="bg-[#38161a] border border-[#ff2026]/20 p-4 text-[#ff2026] text-[10px] font-black uppercase tracking-[0.2em] animate-pulse rounded-lg">
+            Operational Failure: {Array.isArray(error) ? error.join(" | ") : error}
+          </div>
+        )}
         <div className="grid md:grid-cols-2 gap-4">
           <div className="grid gap-2">
             <label className="text-[10px] font-black uppercase tracking-widest text-mute">Full Name</label>
@@ -1332,6 +1343,15 @@ export function CreateEmployeeModal({
         </div>
 
         <div className="grid md:grid-cols-2 gap-4">
+          <div className="grid gap-2">
+            <label className="text-[10px] font-black uppercase tracking-widest text-mute">Phone Number</label>
+            <input
+              className="bg-black/40 border border-line text-white px-4 py-3 rounded-lg focus:border-brand outline-none"
+              placeholder="+92..."
+              value={formData.phone}
+              onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+            />
+          </div>
           <div className="grid gap-2">
             <label className="text-[10px] font-black uppercase tracking-widest text-mute">Clearance Role</label>
             <select
@@ -1424,6 +1444,7 @@ export function EditEmployeeModal({
   onSuccess?: () => void;
 }) {
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | string[]>("");
   const [formData, setFormData] = useState({
     fullName: employee.fullName,
     phone: employee.phone || "",
@@ -1438,6 +1459,7 @@ export function EditEmployeeModal({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
+    setError("");
     try {
       const payload = {
         ...formData,
@@ -1447,8 +1469,12 @@ export function EditEmployeeModal({
       if (res.ok) {
         if (onSuccess) onSuccess();
         onClose();
+      } else {
+        const json = await res.json();
+        setError(json.message || "Update failed.");
       }
-    } catch (err) {
+    } catch (err: any) {
+      setError(err.message || "Failed to synchronize node updates.");
       console.error("Employee update failed:", err);
     } finally {
       setLoading(false);
@@ -1458,6 +1484,11 @@ export function EditEmployeeModal({
   return (
     <Modal isOpen={isOpen} onClose={onClose} title="Update Personnel Metadata" size="lg">
       <form onSubmit={handleSubmit} className="grid gap-5">
+        {error && (
+          <div className="bg-[#38161a] border border-[#ff2026]/20 p-4 text-[#ff2026] text-[10px] font-black uppercase tracking-[0.2em] animate-pulse rounded-lg">
+            Synchronization Failure: {Array.isArray(error) ? error.join(" | ") : error}
+          </div>
+        )}
         <div className="grid md:grid-cols-2 gap-4">
           <div className="grid gap-2">
             <label className="text-[10px] font-black uppercase tracking-widest text-mute">Full Name</label>

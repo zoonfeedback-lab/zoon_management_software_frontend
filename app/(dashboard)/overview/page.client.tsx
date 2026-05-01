@@ -80,8 +80,7 @@ export default function OverviewClient() {
               Monitor active programs, deployment nodes, and technical velocity from a unified precision-built operating view.
             </p>
           </div>
-          <div className="flex flex-wrap gap-4">
-            <GhostButton className="rounded-lg">Live Server Status</GhostButton>
+          <div className="flex flex-col gap-3 min-w-[200px]">
             <button
               onClick={() => setIsProjectModalOpen(true)}
               className="inline-flex items-center justify-center gap-3 bg-[#ff2026] px-6 py-3.5 text-sm font-bold uppercase tracking-wider text-white transition hover:bg-[#ff343a] rounded-lg shadow-[0_4px_14px_rgba(255,32,38,0.3)]"
@@ -89,6 +88,9 @@ export default function OverviewClient() {
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
               New Project
             </button>
+            <GhostButton className="rounded-lg px-6 py-3.5 text-sm tracking-wider w-full border-white/10 hover:border-white/30">
+              Live Server Status
+            </GhostButton>
           </div>
         </div>
 
