@@ -82,7 +82,7 @@ export default function EmployeesClient() {
               />
            </div>
            <div className="flex gap-2">
-              <button className="px-4 py-2 text-[10px] font-bold uppercase tracking-widest text-mute border border-line hover:border-white transition-colors">Export DB</button>
+              <button className="px-4 py-2 text-[10px] font-bold uppercase tracking-widest text-mute border border-line hover:border-white transition-colors">EXPORT</button>
            </div>
         </div>
 
