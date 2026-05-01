@@ -38,7 +38,7 @@ export default function CreateProjectPage() {
       try {
         const [clientsRes, usersRes] = await Promise.all([
           api.get("/clients"),
-          api.get("/users"),
+          api.get("/employees"),
         ]);
 
         if (!clientsRes.ok || !usersRes.ok) {
