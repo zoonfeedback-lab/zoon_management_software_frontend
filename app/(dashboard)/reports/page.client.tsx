@@ -1,12 +1,63 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { BarChart, Section } from "@/components/ui";
 
-export default function ReportsClient() {
-  const [dateRange, setDateRange] = useState("Q3 2024");
+type Quarter = "Q1" | "Q2" | "Q3" | "Q4";
 
-  const projectPerformance = [
+interface ReportFilter {
+  year: number;
+  quarter: Quarter;
+}
+
+interface ChartDatum {
+  label: string;
+  value: number;
+  maxValue: number;
+}
+
+const QUARTERS: Quarter[] = ["Q1", "Q2", "Q3", "Q4"];
+
+function getCurrentQuarter(date = new Date()): Quarter {
+  const quarterNumber = Math.floor(date.getMonth() / 3) + 1;
+  return `Q${quarterNumber}` as Quarter;
+}
+
+function getQuarterIndex(quarter: Quarter): number {
+  return Number(quarter.replace("Q", ""));
+}
+
+export default function ReportsClient() {
+  const currentDate = new Date();
+  const currentYear = currentDate.getFullYear();
+  const currentQuarter = getCurrentQuarter(currentDate);
+  const currentQuarterIndex = getQuarterIndex(currentQuarter);
+
+  const availableYears = Array.from(
+    { length: Math.max(currentYear, 2025) - 2022 + 1 },
+    (_, index) => 2022 + index,
+  );
+
+  const [selectedYear, setSelectedYear] = useState<number>(currentYear);
+  const [selectedQuarter, setSelectedQuarter] = useState<Quarter>(currentQuarter);
+
+  const [projectPerformance, setProjectPerformance] = useState<ChartDatum[]>([
+    { label: "Genesis", value: 85, maxValue: 100 },
+    { label: "Epsilon", value: 62, maxValue: 100 },
+    { label: "Nexus", value: 94, maxValue: 100 },
+    { label: "Titan", value: 45, maxValue: 100 },
+    { label: "Aether", value: 78, maxValue: 100 },
+  ]);
+
+  const [teamVelocity, setTeamVelocity] = useState<ChartDatum[]>([
+    { label: "WK 32", value: 120, maxValue: 150 },
+    { label: "WK 33", value: 142, maxValue: 150 },
+    { label: "WK 34", value: 98, maxValue: 150 },
+    { label: "WK 35", value: 135, maxValue: 150 },
+    { label: "WK 36", value: 150, maxValue: 150 },
+  ]);
+
+  const baseProjectPerformance: ChartDatum[] = [
     { label: "Genesis", value: 85, maxValue: 100 },
     { label: "Epsilon", value: 62, maxValue: 100 },
     { label: "Nexus", value: 94, maxValue: 100 },
@@ -14,13 +65,49 @@ export default function ReportsClient() {
     { label: "Aether", value: 78, maxValue: 100 },
   ];
 
-  const teamVelocity = [
+  const baseTeamVelocity: ChartDatum[] = [
     { label: "WK 32", value: 120, maxValue: 150 },
     { label: "WK 33", value: 142, maxValue: 150 },
     { label: "WK 34", value: 98, maxValue: 150 },
     { label: "WK 35", value: 135, maxValue: 150 },
     { label: "WK 36", value: 150, maxValue: 150 },
   ];
+
+  const getReportDataForFilter = (filter: ReportFilter) => {
+    const quarterIndex = getQuarterIndex(filter.quarter);
+    const yearOffset = (filter.year - currentYear) * 0.02;
+    const quarterOffset = (quarterIndex - currentQuarterIndex) * 0.03;
+    const multiplier = Math.max(0.75, Math.min(1.25, 1 + yearOffset + quarterOffset));
+
+    return {
+      projectPerformance: baseProjectPerformance.map((item) => ({
+        ...item,
+        value: Math.min(item.maxValue, Math.max(0, Math.round(item.value * multiplier))),
+      })),
+      teamVelocity: baseTeamVelocity.map((item) => ({
+        ...item,
+        value: Math.min(item.maxValue, Math.max(0, Math.round(item.value * multiplier))),
+      })),
+    };
+  };
+
+  const loadData = (filter: ReportFilter) => {
+    const data = getReportDataForFilter(filter);
+    setProjectPerformance(data.projectPerformance);
+    setTeamVelocity(data.teamVelocity);
+  };
+
+  useEffect(() => {
+    loadData({ year: selectedYear, quarter: selectedQuarter });
+  }, [selectedYear, selectedQuarter]);
+
+  const handleYearChange = (year: number) => {
+    setSelectedYear(year);
+
+    if (year === currentYear && getQuarterIndex(selectedQuarter) > currentQuarterIndex) {
+      setSelectedQuarter(currentQuarter);
+    }
+  };
 
   return (
     <div className="grid gap-8">
@@ -34,15 +121,31 @@ export default function ReportsClient() {
           </p>
         </div>
         <div className="flex flex-wrap gap-4">
-          <select 
-            value={dateRange}
-            onChange={(e) => setDateRange(e.target.value)}
+          <select
+            value={selectedYear}
+            onChange={(e) => handleYearChange(Number(e.target.value))}
             className="bg-[#0b0b0d] border border-white/10 text-[#9897a1] px-4 py-3 text-[10px] font-bold uppercase tracking-widest rounded-lg outline-none focus:border-brand/30"
           >
-            <option>Q1 2024</option>
-            <option>Q2 2024</option>
-            <option>Q3 2024</option>
-            <option>Q4 2024</option>
+            {availableYears.map((year) => (
+              <option key={year} value={year}>
+                {year}
+              </option>
+            ))}
+          </select>
+          <select 
+            value={selectedQuarter}
+            onChange={(e) => setSelectedQuarter(e.target.value as Quarter)}
+            className="bg-[#0b0b0d] border border-white/10 text-[#9897a1] px-4 py-3 text-[10px] font-bold uppercase tracking-widest rounded-lg outline-none focus:border-brand/30"
+          >
+            {QUARTERS.map((quarter) => {
+              const isFutureQuarter = selectedYear === currentYear && getQuarterIndex(quarter) > currentQuarterIndex;
+
+              return (
+                <option key={quarter} value={quarter} disabled={isFutureQuarter}>
+                  {quarter}
+                </option>
+              );
+            })}
           </select>
           <button className="inline-flex items-center justify-center gap-3 bg-[#ff2026] px-6 py-3.5 text-sm font-bold uppercase tracking-wider text-white transition hover:bg-[#ff343a] rounded-lg shadow-[0_4px_14px_rgba(255,32,38,0.3)]">
             Export Intelligence
