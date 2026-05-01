@@ -1,6 +1,7 @@
 "use client";
 
-import React, { ReactNode, useState } from "react";
+import React, { ReactNode, useEffect, useState } from "react";
+import { api } from "@/lib/api";
 
 type ModalProps = {
   isOpen: boolean;
@@ -52,22 +53,48 @@ export function Modal({
 export function CreateProjectModal({
   isOpen,
   onClose,
+  onCreate,
 }: {
   isOpen: boolean;
   onClose: () => void;
+  onCreate?: () => void;
 }) {
+  const [clients, setClients] = useState<any[]>([]);
+  const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     name: "",
-    client: "",
-    category: "",
-    budget: "",
-    timeline: "",
+    clientId: "",
+    description: "",
+    startDate: "",
+    deadline: "",
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
+  useEffect(() => {
+    if (isOpen) {
+      api.get("/clients").then(async (res) => {
+        if (res.ok) {
+          const data = await res.json();
+          setClients(data.data);
+        }
+      });
+    }
+  }, [isOpen]);
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log("Project created:", formData);
-    onClose();
+    setLoading(true);
+    try {
+      const res = await api.post("/projects", formData);
+      if (res.ok) {
+        if (onCreate) onCreate();
+        onClose();
+        setFormData({ name: "", clientId: "", description: "", startDate: "", deadline: "" });
+      }
+    } catch (err) {
+      console.error("Project creation failed:", err);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -90,64 +117,54 @@ export function CreateProjectModal({
         <div className="grid md:grid-cols-2 gap-4">
           <div className="grid gap-2">
             <label className="text-sm font-semibold text-white">Client *</label>
-            <input
-              type="text"
+            <select
               required
               className="bg-black/50 border border-line text-white px-3 py-2 rounded-sm focus:border-brand focus:outline-none transition-colors"
-              placeholder="Client name"
-              value={formData.client}
+              value={formData.clientId}
               onChange={(e) =>
-                setFormData({ ...formData, client: e.target.value })
+                setFormData({ ...formData, clientId: e.target.value })
               }
-            />
+            >
+              <option value="">Select Client</option>
+              {clients.map(c => <option key={c.id} value={c.id}>{c.companyName}</option>)}
+            </select>
           </div>
 
           <div className="grid gap-2">
-            <label htmlFor="filter-category" className="text-sm font-semibold text-white">Category *</label>
-            <select
-              id="filter-category"
-              title="Select category"
-              required
+            <label className="text-sm font-semibold text-white">Description</label>
+            <input
+              type="text"
               className="bg-black/50 border border-line text-white px-3 py-2 rounded-sm focus:border-brand focus:outline-none transition-colors"
-              value={formData.category}
+              placeholder="Project description"
+              value={formData.description}
               onChange={(e) =>
-                setFormData({ ...formData, category: e.target.value })
+                setFormData({ ...formData, description: e.target.value })
               }
-            >
-              <option value="">Select category</option>
-              <option value="Web Development">Web Development</option>
-              <option value="Infrastructure">Infrastructure</option>
-              <option value="AI/ML">AI/ML</option>
-              <option value="Security">Security</option>
-            </select>
+            />
           </div>
         </div>
 
         <div className="grid md:grid-cols-2 gap-4">
           <div className="grid gap-2">
-            <label className="text-sm font-semibold text-white">Budget *</label>
+            <label className="text-sm font-semibold text-white">Start Date</label>
             <input
-              type="text"
-              required
+              type="date"
               className="bg-black/50 border border-line text-white px-3 py-2 rounded-sm focus:border-brand focus:outline-none transition-colors"
-              placeholder="$50,000"
-              value={formData.budget}
+              value={formData.startDate}
               onChange={(e) =>
-                setFormData({ ...formData, budget: e.target.value })
+                setFormData({ ...formData, startDate: e.target.value })
               }
             />
           </div>
 
           <div className="grid gap-2">
-            <label className="text-sm font-semibold text-white">Timeline *</label>
+            <label className="text-sm font-semibold text-white">Deadline</label>
             <input
-              type="text"
-              required
+              type="date"
               className="bg-black/50 border border-line text-white px-3 py-2 rounded-sm focus:border-brand focus:outline-none transition-colors"
-              placeholder="3 Months"
-              value={formData.timeline}
+              value={formData.deadline}
               onChange={(e) =>
-                setFormData({ ...formData, timeline: e.target.value })
+                setFormData({ ...formData, deadline: e.target.value })
               }
             />
           </div>
@@ -163,9 +180,10 @@ export function CreateProjectModal({
           </button>
           <button
             type="submit"
-            className="flex-1 px-4 py-2 bg-brand text-white font-semibold hover:bg-[#ff343a] transition-colors rounded-sm"
+            disabled={loading}
+            className="flex-1 px-4 py-2 bg-brand text-white font-semibold hover:bg-[#ff343a] transition-colors rounded-sm disabled:opacity-50"
           >
-            Create Project
+            {loading ? "Initializing..." : "Create Project"}
           </button>
         </div>
       </form>
@@ -561,81 +579,129 @@ export function SearchFilterModal({
 export function FileUploadModal({
   isOpen,
   onClose,
+  projectId,
+  onSuccess,
 }: {
   isOpen: boolean;
   onClose: () => void;
+  projectId: string;
+  onSuccess?: () => void;
 }) {
-  const [files, setFiles] = useState<File[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [formData, setFormData] = useState({
+    fileName: "",
+    fileUrl: "",
+    fileType: "application/pdf",
+    fileSize: 0,
+    description: "",
+  });
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files) {
-      setFiles(Array.from(e.target.files));
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    try {
+      const res = await api.post(`/projects/${projectId}/deliverables`, {
+        ...formData,
+        projectId,
+      });
+      if (res.ok) {
+        if (onSuccess) onSuccess();
+        onClose();
+        setFormData({
+          fileName: "",
+          fileUrl: "",
+          fileType: "application/pdf",
+          fileSize: 0,
+          description: "",
+        });
+      }
+    } catch (err) {
+      console.error("Failed to create deliverable:", err);
+    } finally {
+      setLoading(false);
     }
   };
 
-  const handleUpload = () => {
-    console.log("Uploading files:", files);
-    setFiles([]);
-    onClose();
-  };
-
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title="Upload Files" size="md">
-      <div className="grid gap-5">
-        <div className="border border-dashed border-line p-8 rounded-sm text-center hover:border-brand transition-colors group cursor-pointer">
+    <Modal isOpen={isOpen} onClose={onClose} title="Register Deliverable" size="md">
+      <form onSubmit={handleSubmit} className="grid gap-5">
+        <div className="grid gap-2">
+          <label className="text-xs font-black uppercase tracking-widest text-[#9897a1]">File Name</label>
           <input
-            type="file"
-            multiple
-            className="hidden"
-            id="file-upload"
-            onChange={handleFileChange}
-            accept=".pdf,.zip,.doc,.docx"
+            required
+            type="text"
+            className="bg-[#0b0b0d] border border-white/10 text-white px-4 py-3 rounded-lg focus:border-brand/30 outline-none"
+            placeholder="e.g., architectural-blueprint-v1.pdf"
+            value={formData.fileName}
+            onChange={(e) => setFormData({ ...formData, fileName: e.target.value })}
           />
-          <label
-            htmlFor="file-upload"
-            className="cursor-pointer block"
-          >
-            <p className="text-2xl mb-2">📤</p>
-            <p className="text-white font-semibold">Drop files here or click to select</p>
-            <p className="text-sm text-zinc-500 mt-1">Max 50MB per file. Supported: PDF, ZIP, DOCX</p>
-          </label>
         </div>
 
-        {files.length > 0 && (
-          <div className="space-y-2">
-            <p className="text-sm font-semibold text-white">Files to upload:</p>
-            <div className="space-y-1 max-h-48 overflow-y-auto">
-              {files.map((file, idx) => (
-                <div
-                  key={idx}
-                  className="flex items-center justify-between bg-zinc-900/50 p-2 rounded-sm text-sm"
-                >
-                  <span className="text-white truncate">{file.name}</span>
-                  <span className="text-zinc-500">
-                    {(file.size / 1024 / 1024).toFixed(2)} MB
-                  </span>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
+        <div className="grid gap-2">
+          <label className="text-xs font-black uppercase tracking-widest text-[#9897a1]">File URL (Public Access)</label>
+          <input
+            required
+            type="url"
+            className="bg-[#0b0b0d] border border-white/10 text-white px-4 py-3 rounded-lg focus:border-brand/30 outline-none"
+            placeholder="https://cdn.zoonlabs.io/..."
+            value={formData.fileUrl}
+            onChange={(e) => setFormData({ ...formData, fileUrl: e.target.value })}
+          />
+        </div>
 
-        <div className="flex gap-3 pt-4 border-t border-line">
+        <div className="grid md:grid-cols-2 gap-4">
+          <div className="grid gap-2">
+            <label className="text-xs font-black uppercase tracking-widest text-[#9897a1]">File Type</label>
+            <select
+              className="bg-[#0b0b0d] border border-white/10 text-white px-4 py-3 rounded-lg focus:border-brand/30 outline-none"
+              value={formData.fileType}
+              onChange={(e) => setFormData({ ...formData, fileType: e.target.value })}
+            >
+              <option value="application/pdf">PDF</option>
+              <option value="application/zip">ZIP Archive</option>
+              <option value="image/png">PNG Image</option>
+              <option value="application/octet-stream">Binary Data</option>
+            </select>
+          </div>
+          <div className="grid gap-2">
+            <label className="text-xs font-black uppercase tracking-widest text-[#9897a1]">Size (Bytes)</label>
+            <input
+              type="number"
+              className="bg-[#0b0b0d] border border-white/10 text-white px-4 py-3 rounded-lg focus:border-brand/30 outline-none"
+              value={formData.fileSize}
+              onChange={(e) => setFormData({ ...formData, fileSize: parseInt(e.target.value) })}
+            />
+          </div>
+        </div>
+
+        <div className="grid gap-2">
+          <label className="text-xs font-black uppercase tracking-widest text-[#9897a1]">Description</label>
+          <textarea
+            rows={3}
+            className="bg-[#0b0b0d] border border-white/10 text-white px-4 py-3 rounded-lg focus:border-brand/30 outline-none resize-none"
+            placeholder="Technical specs, handover notes, etc..."
+            value={formData.description}
+            onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+          />
+        </div>
+
+        <div className="flex gap-3 pt-4 border-t border-white/5">
           <button
+            type="button"
             onClick={onClose}
-            className="flex-1 px-4 py-2 border border-line text-white font-semibold bg-transparent hover:bg-white/5 transition-colors rounded-sm"
+            className="flex-1 px-4 py-3 border border-white/10 text-[#9897a1] font-bold uppercase tracking-widest text-[10px] hover:bg-white/5 rounded-lg transition-all"
           >
             Cancel
           </button>
           <button
-            onClick={handleUpload}
-            disabled={files.length === 0}
-            className="flex-1 px-4 py-2 bg-brand text-white font-semibold hover:bg-[#ff343a] transition-colors rounded-sm disabled:opacity-50 disabled:cursor-not-allowed"
+            type="submit"
+            disabled={loading}
+            className="flex-1 px-4 py-3 bg-brand text-white font-bold uppercase tracking-widest text-[10px] hover:bg-[#ff343a] rounded-lg shadow-[0_4px_14px_rgba(255,32,38,0.3)] disabled:opacity-50 transition-all"
           >
-            Upload {files.length > 0 ? `(${files.length})` : ""}
+            {loading ? "Registering..." : "Finalize Asset"}
           </button>
         </div>
-      </div>
+      </form>
     </Modal>
   );
 }
@@ -713,6 +779,790 @@ export function ExportModal({
           </button>
         </div>
       </div>
+    </Modal>
+  );
+}
+export function CreateTaskModal({
+  isOpen,
+  onClose,
+  onCreate,
+}: {
+  isOpen: boolean;
+  onClose: () => void;
+  onCreate?: (task: any) => void;
+}) {
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [projects, setProjects] = useState<any[]>([]);
+  const [users, setUsers] = useState<any[]>([]);
+  const [formData, setFormData] = useState({
+    title: "",
+    description: "",
+    projectId: "",
+    assignedToId: "",
+    priority: "MEDIUM",
+    dueDate: "",
+  });
+
+  useEffect(() => {
+    if (isOpen) {
+      const fetchData = async () => {
+        try {
+          const [pRes, uRes] = await Promise.all([
+            api.get("/projects"),
+            api.get("/employees"),
+          ]);
+          if (pRes.ok && uRes.ok) {
+            setProjects((await pRes.json()).data || []);
+            setUsers((await uRes.json()).data || []);
+          }
+        } catch (err) {
+          console.error("Failed to fetch task form data:", err);
+        }
+      };
+      fetchData();
+    }
+  }, [isOpen]);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    setError("");
+
+    // Clean data: don't send empty string for optional UUID
+    const payload = { ...formData };
+    if (!payload.assignedToId) delete payload.assignedToId;
+
+    try {
+      const res = await api.post("/tasks", payload);
+      if (res.ok) {
+        const newTask = (await res.json()).data;
+        if (onCreate) onCreate(newTask);
+        onClose();
+        setFormData({
+          title: "",
+          description: "",
+          projectId: "",
+          assignedToId: "",
+          priority: "MEDIUM",
+          dueDate: "",
+        });
+      } else {
+        const errJson = await res.json();
+        setError(errJson.message || "Failed to create task");
+      }
+    } catch (err: any) {
+      setError(err.message || "Task creation failed");
+      console.error("Task creation failed:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <Modal isOpen={isOpen} onClose={onClose} title="Initialize Task" size="md">
+      <form onSubmit={handleSubmit} className="grid gap-5">
+        {error && (
+          <div className="bg-brand/10 border border-brand/20 p-3 rounded text-brand text-[10px] font-bold uppercase tracking-wider">
+            {error}
+          </div>
+        )}
+        <div className="grid gap-2">
+          <label className="text-xs font-black uppercase tracking-widest text-[#9897a1]">Task Title</label>
+          <input
+            required
+            type="text"
+            className="bg-[#0b0b0d] border border-white/10 text-white px-4 py-3 rounded-lg focus:border-brand/30 outline-none"
+            placeholder="e.g., Integrate Auth Middleware"
+            value={formData.title}
+            onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+          />
+        </div>
+
+        <div className="grid md:grid-cols-2 gap-4">
+          <div className="grid gap-2">
+            <label className="text-xs font-black uppercase tracking-widest text-[#9897a1]">Project</label>
+            <select
+              required
+              className="bg-[#0b0b0d] border border-white/10 text-white px-4 py-3 rounded-lg focus:border-brand/30 outline-none"
+              value={formData.projectId}
+              onChange={(e) => setFormData({ ...formData, projectId: e.target.value })}
+            >
+              <option value="">Select Project</option>
+              {projects.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
+            </select>
+          </div>
+          <div className="grid gap-2">
+            <label className="text-xs font-black uppercase tracking-widest text-[#9897a1]">Assignee</label>
+            <select
+              className="bg-[#0b0b0d] border border-white/10 text-white px-4 py-3 rounded-lg focus:border-brand/30 outline-none"
+              value={formData.assignedToId}
+              onChange={(e) => setFormData({ ...formData, assignedToId: e.target.value })}
+            >
+              <option value="">Unassigned</option>
+              {formData.projectId ? (
+                projects.find(p => p.id === formData.projectId)?.members?.map((m: any) => (
+                  <option key={m.user.id} value={m.user.id}>{m.user.fullName}</option>
+                ))
+              ) : (
+                users.map(u => <option key={u.id} value={u.id}>{u.fullName}</option>)
+              )}
+            </select>
+          </div>
+        </div>
+
+        <div className="grid md:grid-cols-2 gap-4">
+          <div className="grid gap-2">
+            <label className="text-xs font-black uppercase tracking-widest text-[#9897a1]">Priority</label>
+            <select
+              className="bg-[#0b0b0d] border border-white/10 text-white px-4 py-3 rounded-lg focus:border-brand/30 outline-none"
+              value={formData.priority}
+              onChange={(e) => setFormData({ ...formData, priority: e.target.value })}
+            >
+              <option value="LOW">LOW</option>
+              <option value="MEDIUM">MEDIUM</option>
+              <option value="HIGH">HIGH</option>
+            </select>
+          </div>
+          <div className="grid gap-2">
+            <label className="text-xs font-black uppercase tracking-widest text-[#9897a1]">Due Date</label>
+            <input
+              type="date"
+              className="bg-[#0b0b0d] border border-white/10 text-white px-4 py-3 rounded-lg focus:border-brand/30 outline-none"
+              value={formData.dueDate}
+              onChange={(e) => setFormData({ ...formData, dueDate: e.target.value })}
+            />
+          </div>
+        </div>
+
+        <div className="grid gap-2">
+          <div className="flex items-center justify-between">
+            <label className="text-xs font-black uppercase tracking-widest text-[#9897a1]">Description</label>
+            <label className="group flex cursor-pointer items-center gap-2 text-[10px] font-black uppercase tracking-widest text-[#ff2026] hover:text-[#ff343a]">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" className="transition-transform group-hover:-translate-y-0.5">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/>
+              </svg>
+              Upload Attachments
+              <input type="file" className="hidden" multiple />
+            </label>
+          </div>
+          <textarea
+            rows={3}
+            className="bg-[#0b0b0d] border border-white/10 text-white px-4 py-3 rounded-lg focus:border-brand/30 outline-none resize-none"
+            placeholder="Mission parameters..."
+            value={formData.description}
+            onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+          />
+        </div>
+
+        <div className="flex gap-4 pt-4 border-t border-white/5">
+          <button
+            type="button"
+            onClick={onClose}
+            className="flex-1 px-4 py-3.5 border border-white/10 text-[#9897a1] font-bold uppercase tracking-widest text-[10px] hover:bg-white/5 transition-colors rounded-lg"
+          >
+            Cancel
+          </button>
+          <button
+            disabled={loading}
+            type="submit"
+            className="flex-1 px-4 py-3.5 bg-brand text-white font-bold uppercase tracking-widest text-[10px] hover:bg-[#ff343a] transition-colors rounded-lg shadow-[0_4px_14px_rgba(255,32,38,0.3)] disabled:opacity-50"
+          >
+            {loading ? "Allocating..." : "Assign Mission"}
+          </button>
+        </div>
+      </form>
+    </Modal>
+  );
+}
+export function TaskDetailsModal({
+  isOpen,
+  onClose,
+  task,
+}: {
+  isOpen: boolean;
+  onClose: () => void;
+  task: any;
+}) {
+  const [loading, setLoading] = useState(false);
+  const [fullTask, setFullTask] = useState<any>(task);
+  const [comments, setComments] = useState<any[]>([]);
+  const [newComment, setNewComment] = useState("");
+
+  const fetchComments = async () => {
+    if (!task?.id) return;
+    try {
+      const res = await api.get(`/tasks/${task.id}/comments`);
+      if (res.ok) {
+        setComments((await res.json()).data);
+      }
+    } catch (err) {
+      console.error("Failed to fetch comments:", err);
+    }
+  };
+
+  const fetchTaskDetails = async () => {
+    if (!task?.id) return;
+    try {
+      const res = await api.get(`/tasks/${task.id}`);
+      if (res.ok) {
+        const data = await res.json();
+        setFullTask(data.data);
+      }
+    } catch (err) {
+      console.error("Failed to fetch task details:", err);
+    }
+  };
+
+  useEffect(() => {
+    if (isOpen && task?.id) {
+      fetchTaskDetails();
+      fetchComments();
+    }
+  }, [isOpen, task?.id]);
+
+  const handleAddComment = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newComment.trim()) return;
+    setLoading(true);
+    try {
+      const res = await api.post(`/tasks/${task.id}/comments`, { content: newComment });
+      if (res.ok) {
+        setNewComment("");
+        fetchComments();
+      }
+    } catch (err) {
+      console.error("Failed to add comment:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (!task) return null;
+
+  return (
+    <Modal isOpen={isOpen} onClose={onClose} title="Task Intelligence" size="lg">
+      <div className="grid gap-8 lg:grid-cols-[1fr_300px]">
+        {/* Main Info & Comments */}
+        <div className="grid gap-8">
+          <div>
+            <div className="flex items-center gap-3 mb-2">
+               <span className="text-[10px] font-black uppercase tracking-widest text-brand">{fullTask?.project?.name || "Sector Assigned"}</span>
+               <div className="h-1 w-1 rounded-full bg-[#9897a1]/40" />
+               <span className="text-[10px] font-bold uppercase tracking-widest text-[#9897a1]">{fullTask?.status}</span>
+               <div className="h-1 w-1 rounded-full bg-[#9897a1]/40" />
+               <span className={`text-[10px] font-bold uppercase tracking-widest ${fullTask?.priority === 'HIGH' ? 'text-brand' : 'text-zinc-500'}`}>
+                  {fullTask?.priority} Priority
+               </span>
+            </div>
+            <h2 className="text-2xl font-bold text-white">{fullTask?.title}</h2>
+            <p className="mt-4 text-sm text-[#9897a1] leading-relaxed">{fullTask?.description || "No mission description provided."}</p>
+          </div>
+
+          <div className="grid gap-6">
+            <h3 className="text-[10px] font-black uppercase tracking-widest text-white border-b border-white/5 pb-2">Comms Log</h3>
+            <div className="flex flex-col gap-4 max-h-64 overflow-y-auto pr-2 custom-scrollbar">
+              {comments.map((comment) => (
+                <div key={comment.id} className="flex gap-4">
+                  <div className="h-8 w-8 rounded-lg bg-zinc-800 border border-white/5 flex items-center justify-center text-[10px] font-bold text-white shrink-0">
+                    {comment.user?.fullName.split(' ').map((n: any) => n[0]).join('')}
+                  </div>
+                  <div className="grid gap-1">
+                    <div className="flex items-center gap-3">
+                       <span className="text-xs font-bold text-white">{comment.user?.fullName}</span>
+                       <span className="text-[9px] font-bold text-[#9897a1]/40 uppercase tracking-widest">
+                          {new Date(comment.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                       </span>
+                    </div>
+                    <p className="text-xs text-[#9897a1] leading-relaxed">{comment.content}</p>
+                  </div>
+                </div>
+              ))}
+              {comments.length === 0 && (
+                <div className="py-8 text-center text-[10px] font-bold uppercase tracking-widest text-[#9897a1]/30">
+                   No signals recorded.
+                </div>
+              )}
+            </div>
+
+            <form onSubmit={handleAddComment} className="relative mt-2">
+               <textarea
+                 rows={2}
+                 value={newComment}
+                 onChange={(e) => setNewComment(e.target.value)}
+                 placeholder="Enter signal payload..."
+                 className="w-full bg-[#0b0b0d] border border-white/10 rounded-lg px-4 py-3 text-xs text-white outline-none focus:border-brand/30 resize-none pr-12"
+               />
+               <button 
+                 disabled={loading || !newComment.trim()}
+                 type="submit"
+                 className="absolute right-3 bottom-3 text-brand hover:text-[#ff343a] disabled:opacity-30 transition-colors"
+               >
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M22 2 11 13M22 2l-7 20-4-9-9-4 20-7z"/></svg>
+               </button>
+            </form>
+          </div>
+        </div>
+
+        {/* Sidebar Metadata */}
+        <div className="grid gap-6 border-l border-white/5 pl-8">
+           <div className="grid gap-2">
+              <span className="text-[9px] font-black uppercase tracking-widest text-[#9897a1]">Assignee</span>
+              <div className="flex items-center gap-3">
+                 <div className="h-6 w-6 rounded-full bg-zinc-800 border border-white/5 flex items-center justify-center text-[8px] font-bold text-white">
+                    {task.assignedTo?.fullName.split(' ').map((n: any) => n[0]).join('') || '?'}
+                 </div>
+                 <span className="text-xs font-bold text-white/80">{task.assignedTo?.fullName || "Unassigned"}</span>
+              </div>
+           </div>
+           
+           <div className="grid gap-2">
+              <span className="text-[9px] font-black uppercase tracking-widest text-[#9897a1]">Priority</span>
+              <div className="flex items-center gap-2">
+                 <div className={`h-1.5 w-1.5 rounded-full ${task.priority === 'CRITICAL' ? 'bg-brand shadow-[0_0_8px_rgba(255,32,38,0.5)]' : 'bg-zinc-600'}`} />
+                 <span className="text-[10px] font-black uppercase tracking-widest text-white">{task.priority}</span>
+              </div>
+           </div>
+
+           <div className="grid gap-2">
+              <span className="text-[9px] font-black uppercase tracking-widest text-[#9897a1]">Due Date</span>
+              <span className="font-mono text-xs font-bold text-white">{task.dueDate ? new Date(task.dueDate).toLocaleDateString() : 'NO DEADLINE'}</span>
+           </div>
+
+           <div className="pt-4 mt-auto border-t border-white/5">
+              <button onClick={onClose} className="w-full py-2.5 rounded-lg border border-white/10 text-[10px] font-black uppercase tracking-widest text-[#9897a1] hover:bg-white/5 hover:text-white transition-all">
+                 Dismiss
+              </button>
+           </div>
+        </div>
+      </div>
+    </Modal>
+  );
+}
+export function CreateClientModal({
+  isOpen,
+  onClose,
+  onCreate,
+}: {
+  isOpen: boolean;
+  onClose: () => void;
+  onCreate?: (client: any) => void;
+}) {
+  const [loading, setLoading] = useState(false);
+  const [formData, setFormData] = useState({
+    companyName: "",
+    contactPerson: "",
+    email: "",
+    phone: "",
+  });
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    try {
+      const res = await api.post("/clients", formData);
+      if (res.ok) {
+        const newClient = (await res.json()).data;
+        if (onCreate) onCreate(newClient);
+        onClose();
+        setFormData({
+          companyName: "",
+          contactPerson: "",
+          email: "",
+          phone: "",
+        });
+      }
+    } catch (err) {
+      console.error("Client creation failed:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <Modal isOpen={isOpen} onClose={onClose} title="Register Client Partner" size="md">
+      <form onSubmit={handleSubmit} className="grid gap-5">
+        <div className="grid gap-2">
+          <label className="text-xs font-black uppercase tracking-widest text-[#9897a1]">Company Name</label>
+          <input
+            required
+            type="text"
+            className="bg-[#0b0b0d] border border-white/10 text-white px-4 py-3 rounded-lg focus:border-brand/30 outline-none"
+            placeholder="e.g., Acme Corp"
+            value={formData.companyName}
+            onChange={(e) => setFormData({ ...formData, companyName: e.target.value })}
+          />
+        </div>
+
+        <div className="grid gap-2">
+          <label className="text-xs font-black uppercase tracking-widest text-[#9897a1]">Contact Person</label>
+          <input
+            required
+            type="text"
+            className="bg-[#0b0b0d] border border-white/10 text-white px-4 py-3 rounded-lg focus:border-brand/30 outline-none"
+            placeholder="Jane Smith"
+            value={formData.contactPerson}
+            onChange={(e) => setFormData({ ...formData, contactPerson: e.target.value })}
+          />
+        </div>
+
+        <div className="grid md:grid-cols-2 gap-4">
+          <div className="grid gap-2">
+            <label className="text-xs font-black uppercase tracking-widest text-[#9897a1]">Email Address</label>
+            <input
+              required
+              type="email"
+              className="bg-[#0b0b0d] border border-white/10 text-white px-4 py-3 rounded-lg focus:border-brand/30 outline-none"
+              placeholder="contact@acme.com"
+              value={formData.email}
+              onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+            />
+          </div>
+          <div className="grid gap-2">
+            <label className="text-xs font-black uppercase tracking-widest text-[#9897a1]">Phone Number</label>
+            <input
+              type="text"
+              className="bg-[#0b0b0d] border border-white/10 text-white px-4 py-3 rounded-lg focus:border-brand/30 outline-none"
+              placeholder="+1-..."
+              value={formData.phone}
+              onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+            />
+          </div>
+        </div>
+
+        <div className="flex gap-4 pt-4 border-t border-white/5">
+          <button
+            type="button"
+            onClick={onClose}
+            className="flex-1 px-4 py-3.5 border border-white/10 text-[#9897a1] font-bold uppercase tracking-widest text-[10px] hover:bg-white/5 transition-colors rounded-lg"
+          >
+            Cancel
+          </button>
+          <button
+            disabled={loading}
+            type="submit"
+            className="flex-1 px-4 py-3.5 bg-brand text-white font-bold uppercase tracking-widest text-[10px] hover:bg-[#ff343a] transition-colors rounded-lg shadow-[0_4px_14px_rgba(255,32,38,0.3)] disabled:opacity-50"
+          >
+            {loading ? "Registering..." : "Authorize Partner"}
+          </button>
+        </div>
+      </form>
+    </Modal>
+  );
+}
+
+export function CreateEmployeeModal({
+  isOpen,
+  onClose,
+  onSuccess,
+}: {
+  isOpen: boolean;
+  onClose: () => void;
+  onSuccess?: () => void;
+}) {
+  const [loading, setLoading] = useState(false);
+  const [formData, setFormData] = useState({
+    email: "",
+    password: "Admin@123",
+    fullName: "",
+    role: "INTERNEE",
+    phone: "",
+    jobTitle: "",
+    department: "Engineering",
+    experienceLevel: "Junior",
+    skills: "",
+    availabilityStatus: "AVAILABLE",
+  });
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    try {
+      const payload = {
+        ...formData,
+        skills: formData.skills.split(",").map(s => s.trim()).filter(s => s),
+      };
+      const res = await api.post("/employees", payload);
+      if (res.ok) {
+        if (onSuccess) onSuccess();
+        onClose();
+        setFormData({
+          email: "",
+          password: "Admin@123",
+          fullName: "",
+          role: "INTERNEE",
+          phone: "",
+          jobTitle: "",
+          department: "Engineering",
+          experienceLevel: "Junior",
+          skills: "",
+          availabilityStatus: "AVAILABLE",
+        });
+      }
+    } catch (err) {
+      console.error("Employee creation failed:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <Modal isOpen={isOpen} onClose={onClose} title="Initialize Personnel Node" size="lg">
+      <form onSubmit={handleSubmit} className="grid gap-5">
+        <div className="grid md:grid-cols-2 gap-4">
+          <div className="grid gap-2">
+            <label className="text-[10px] font-black uppercase tracking-widest text-mute">Full Name</label>
+            <input
+              required
+              className="bg-black/40 border border-line text-white px-4 py-3 rounded-lg focus:border-brand outline-none"
+              value={formData.fullName}
+              onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
+            />
+          </div>
+          <div className="grid gap-2">
+            <label className="text-[10px] font-black uppercase tracking-widest text-mute">Email Address</label>
+            <input
+              required
+              type="email"
+              className="bg-black/40 border border-line text-white px-4 py-3 rounded-lg focus:border-brand outline-none"
+              value={formData.email}
+              onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+            />
+          </div>
+        </div>
+
+        <div className="grid md:grid-cols-2 gap-4">
+          <div className="grid gap-2">
+            <label className="text-[10px] font-black uppercase tracking-widest text-mute">Clearance Role</label>
+            <select
+              className="bg-black/40 border border-line text-white px-4 py-3 rounded-lg focus:border-brand outline-none"
+              value={formData.role}
+              onChange={(e) => setFormData({ ...formData, role: e.target.value })}
+            >
+              <option value="INTERNEE">INTERNEE</option>
+              <option value="CORE_TEAM">CORE TEAM</option>
+              <option value="ADMIN">ADMINISTRATOR</option>
+            </select>
+          </div>
+          <div className="grid gap-2">
+            <label className="text-[10px] font-black uppercase tracking-widest text-mute">Job Title</label>
+            <input
+              className="bg-black/40 border border-line text-white px-4 py-3 rounded-lg focus:border-brand outline-none"
+              placeholder="e.g., Software Engineer"
+              value={formData.jobTitle}
+              onChange={(e) => setFormData({ ...formData, jobTitle: e.target.value })}
+            />
+          </div>
+        </div>
+
+        <div className="grid md:grid-cols-3 gap-4">
+          <div className="grid gap-2">
+            <label className="text-[10px] font-black uppercase tracking-widest text-mute">Department</label>
+            <input
+              className="bg-black/40 border border-line text-white px-4 py-3 rounded-lg focus:border-brand outline-none"
+              value={formData.department}
+              onChange={(e) => setFormData({ ...formData, department: e.target.value })}
+            />
+          </div>
+          <div className="grid gap-2">
+            <label className="text-[10px] font-black uppercase tracking-widest text-mute">Experience Level</label>
+            <select
+              className="bg-black/40 border border-line text-white px-4 py-3 rounded-lg focus:border-brand outline-none"
+              value={formData.experienceLevel}
+              onChange={(e) => setFormData({ ...formData, experienceLevel: e.target.value })}
+            >
+              <option value="Junior">Junior</option>
+              <option value="Mid-Level">Mid-Level</option>
+              <option value="Senior">Senior</option>
+              <option value="Lead">Lead</option>
+            </select>
+          </div>
+          <div className="grid gap-2">
+            <label className="text-[10px] font-black uppercase tracking-widest text-mute">Availability</label>
+            <select
+              className="bg-black/40 border border-line text-white px-4 py-3 rounded-lg focus:border-brand outline-none"
+              value={formData.availabilityStatus}
+              onChange={(e) => setFormData({ ...formData, availabilityStatus: e.target.value })}
+            >
+              <option value="AVAILABLE">AVAILABLE</option>
+              <option value="BUSY">BUSY</option>
+              <option value="ON_LEAVE">ON LEAVE</option>
+            </select>
+          </div>
+        </div>
+
+        <div className="grid gap-2">
+          <label className="text-[10px] font-black uppercase tracking-widest text-mute">Skills (Comma separated)</label>
+          <input
+            className="bg-black/40 border border-line text-white px-4 py-3 rounded-lg focus:border-brand outline-none"
+            placeholder="nestjs, prisma, react, nextjs"
+            value={formData.skills}
+            onChange={(e) => setFormData({ ...formData, skills: e.target.value })}
+          />
+        </div>
+
+        <div className="flex gap-4 pt-4 border-t border-white/5">
+          <button type="button" onClick={onClose} className="flex-1 px-4 py-3 border border-white/10 text-mute font-bold uppercase tracking-widest text-xs hover:bg-white/5 rounded-lg">Cancel</button>
+          <button type="submit" disabled={loading} className="flex-1 px-4 py-3 bg-brand text-white font-bold uppercase tracking-widest text-xs hover:bg-[#ff343a] rounded-lg shadow-lg disabled:opacity-50">
+            {loading ? "Initializing..." : "Finalize Node"}
+          </button>
+        </div>
+      </form>
+    </Modal>
+  );
+}
+
+export function EditEmployeeModal({
+  isOpen,
+  onClose,
+  employee,
+  onSuccess,
+}: {
+  isOpen: boolean;
+  onClose: () => void;
+  employee: any;
+  onSuccess?: () => void;
+}) {
+  const [loading, setLoading] = useState(false);
+  const [formData, setFormData] = useState({
+    fullName: employee.fullName,
+    phone: employee.phone || "",
+    jobTitle: employee.jobTitle || "",
+    department: employee.department || "",
+    experienceLevel: employee.experienceLevel || "Junior",
+    skills: Array.isArray(employee.skills) ? employee.skills.join(", ") : "",
+    availabilityStatus: employee.availabilityStatus || "AVAILABLE",
+    isActive: employee.isActive,
+  });
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    try {
+      const payload = {
+        ...formData,
+        skills: formData.skills.split(",").map(s => s.trim()).filter(s => s),
+      };
+      const res = await api.patch(`/employees/${employee.id}`, payload);
+      if (res.ok) {
+        if (onSuccess) onSuccess();
+        onClose();
+      }
+    } catch (err) {
+      console.error("Employee update failed:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <Modal isOpen={isOpen} onClose={onClose} title="Update Personnel Metadata" size="lg">
+      <form onSubmit={handleSubmit} className="grid gap-5">
+        <div className="grid md:grid-cols-2 gap-4">
+          <div className="grid gap-2">
+            <label className="text-[10px] font-black uppercase tracking-widest text-mute">Full Name</label>
+            <input
+              required
+              className="bg-black/40 border border-line text-white px-4 py-3 rounded-lg focus:border-brand outline-none"
+              value={formData.fullName}
+              onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
+            />
+          </div>
+          <div className="grid gap-2">
+            <label className="text-[10px] font-black uppercase tracking-widest text-mute">Phone</label>
+            <input
+              className="bg-black/40 border border-line text-white px-4 py-3 rounded-lg focus:border-brand outline-none"
+              value={formData.phone}
+              onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+            />
+          </div>
+        </div>
+
+        <div className="grid md:grid-cols-2 gap-4">
+          <div className="grid gap-2">
+            <label className="text-[10px] font-black uppercase tracking-widest text-mute">Job Title</label>
+            <input
+              className="bg-black/40 border border-line text-white px-4 py-3 rounded-lg focus:border-brand outline-none"
+              value={formData.jobTitle}
+              onChange={(e) => setFormData({ ...formData, jobTitle: e.target.value })}
+            />
+          </div>
+          <div className="grid gap-2">
+            <label className="text-[10px] font-black uppercase tracking-widest text-mute">Department</label>
+            <input
+              className="bg-black/40 border border-line text-white px-4 py-3 rounded-lg focus:border-brand outline-none"
+              value={formData.department}
+              onChange={(e) => setFormData({ ...formData, department: e.target.value })}
+            />
+          </div>
+        </div>
+
+        <div className="grid md:grid-cols-3 gap-4">
+          <div className="grid gap-2">
+            <label className="text-[10px] font-black uppercase tracking-widest text-mute">Status</label>
+            <select
+              className="bg-black/40 border border-line text-white px-4 py-3 rounded-lg focus:border-brand outline-none"
+              value={formData.isActive ? "true" : "false"}
+              onChange={(e) => setFormData({ ...formData, isActive: e.target.value === "true" })}
+            >
+              <option value="true">Active Node</option>
+              <option value="false">Suspended</option>
+            </select>
+          </div>
+          <div className="grid gap-2">
+            <label className="text-[10px] font-black uppercase tracking-widest text-mute">Experience Level</label>
+            <select
+              className="bg-black/40 border border-line text-white px-4 py-3 rounded-lg focus:border-brand outline-none"
+              value={formData.experienceLevel}
+              onChange={(e) => setFormData({ ...formData, experienceLevel: e.target.value })}
+            >
+              <option value="Junior">Junior</option>
+              <option value="Mid-Level">Mid-Level</option>
+              <option value="Senior">Senior</option>
+              <option value="Lead">Lead</option>
+            </select>
+          </div>
+          <div className="grid gap-2">
+            <label className="text-[10px] font-black uppercase tracking-widest text-mute">Availability</label>
+            <select
+              className="bg-black/40 border border-line text-white px-4 py-3 rounded-lg focus:border-brand outline-none"
+              value={formData.availabilityStatus}
+              onChange={(e) => setFormData({ ...formData, availabilityStatus: e.target.value })}
+            >
+              <option value="AVAILABLE">AVAILABLE</option>
+              <option value="BUSY">BUSY</option>
+              <option value="ON_LEAVE">ON LEAVE</option>
+            </select>
+          </div>
+        </div>
+
+        <div className="grid gap-2">
+          <label className="text-[10px] font-black uppercase tracking-widest text-mute">Skills (Comma separated)</label>
+          <input
+            className="bg-black/40 border border-line text-white px-4 py-3 rounded-lg focus:border-brand outline-none"
+            value={formData.skills}
+            onChange={(e) => setFormData({ ...formData, skills: e.target.value })}
+          />
+        </div>
+
+        <div className="flex gap-4 pt-4 border-t border-white/5">
+          <button type="button" onClick={onClose} className="flex-1 px-4 py-3 border border-white/10 text-mute font-bold uppercase tracking-widest text-xs hover:bg-white/5 rounded-lg">Cancel</button>
+          <button 
+            type="button" 
+            onClick={() => {
+              const url = `${window.location.origin}/auth/login?email=${employee.email}`;
+              navigator.clipboard.writeText(url);
+              alert("Portal access link copied to clipboard.");
+            }}
+            className="flex-1 px-4 py-3 border border-brand/30 text-brand font-bold uppercase tracking-widest text-xs hover:bg-brand/5 rounded-lg"
+          >
+            Copy Portal Link
+          </button>
+          <button type="submit" disabled={loading} className="flex-1 px-4 py-3 bg-brand text-white font-bold uppercase tracking-widest text-xs hover:bg-[#ff343a] rounded-lg shadow-lg disabled:opacity-50">
+            {loading ? "Updating..." : "Synchronize Node"}
+          </button>
+        </div>
+      </form>
     </Modal>
   );
 }

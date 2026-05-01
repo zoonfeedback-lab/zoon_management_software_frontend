@@ -5,6 +5,7 @@ type SectionProps = {
   eyebrow?: string;
   action?: string;
   actionHref?: string;
+  onAction?: () => void;
   children: React.ReactNode;
   className?: string;
   bodyClassName?: string;
@@ -15,6 +16,7 @@ export function Section({
   eyebrow,
   action,
   actionHref = "#",
+  onAction,
   children,
   className = "",
   bodyClassName = "",
@@ -29,9 +31,18 @@ export function Section({
           <h2 className="text-lg font-semibold text-white md:text-xl">{title}</h2>
         </div>
         {action ? (
-          <Link href={actionHref} className="text-sm font-semibold uppercase tracking-[0.2em] text-brand">
-            {action}
-          </Link>
+          onAction ? (
+            <button 
+              onClick={onAction}
+              className="text-sm font-semibold uppercase tracking-[0.2em] text-brand hover:text-[#ff343a] transition-colors"
+            >
+              {action}
+            </button>
+          ) : (
+            <Link href={actionHref} className="text-sm font-semibold uppercase tracking-[0.2em] text-brand">
+              {action}
+            </Link>
+          )
         ) : null}
       </div>
       <div className={bodyClassName}>{children}</div>
@@ -123,9 +134,9 @@ export function MediaGallery({ media }: MediaGalleryProps) {
 }
 
 type FileListProps = {
-  files: Array<{ name: string; meta: string; size: string; kind: "PDF" | "ZIP" | "DOC" }>;
-  onDownload?: (fileName: string) => void;
-  onDelete?: (fileName: string) => void;
+  files: Array<{ id: string; name: string; meta: string; size: string; kind: "PDF" | "ZIP" | "DOC" }>;
+  onDownload?: (id: string) => void;
+  onDelete?: (id: string) => void;
 };
 
 export function FileList({ files, onDownload, onDelete }: FileListProps) {
@@ -146,7 +157,7 @@ export function FileList({ files, onDownload, onDelete }: FileListProps) {
     <div className="divide-y divide-line">
       {files.map((file) => (
         <div
-          key={file.name}
+          key={file.id}
           className="flex flex-col gap-4 p-4 transition hover:bg-white/[0.03] md:flex-row md:items-center md:justify-between md:p-5 group"
         >
           <div className="flex items-center gap-4">
@@ -162,14 +173,14 @@ export function FileList({ files, onDownload, onDelete }: FileListProps) {
             <span className="text-sm font-semibold text-mute">{file.size}</span>
               <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
                 <button
-                  onClick={() => onDownload && onDownload(file.name)}
+                  onClick={() => onDownload && onDownload(file.id)}
                   className="p-1.5 text-zinc-400 hover:text-white transition-colors"
                   title="Download"
                 >
                   ⬇️
                 </button>
                 <button
-                  onClick={() => onDelete && onDelete(file.name)}
+                  onClick={() => onDelete && onDelete(file.id)}
                   className="p-1.5 text-zinc-400 hover:text-brand transition-colors"
                   title="Delete"
                 >
@@ -179,6 +190,11 @@ export function FileList({ files, onDownload, onDelete }: FileListProps) {
           </div>
         </div>
       ))}
+      {files.length === 0 && (
+        <div className="py-12 text-center">
+          <p className="text-sm font-bold uppercase tracking-[0.2em] text-mute opacity-40">No deliverables registered in this sector.</p>
+        </div>
+      )}
     </div>
   );
 }
@@ -226,6 +242,17 @@ export function BarChart({ data }: BarChartProps) {
           </div>
         );
       })}
+    </div>
+  );
+}
+
+export function Loader({ className = "" }: { className?: string }) {
+  return (
+    <div className={`flex flex-col items-center justify-center ${className}`}>
+      <div className="relative size-10">
+        <div className="absolute inset-0 rounded-full border-2 border-brand/20" />
+        <div className="absolute inset-0 animate-spin rounded-full border-2 border-brand border-t-transparent shadow-[0_0_15px_rgba(255,32,38,0.3)]" />
+      </div>
     </div>
   );
 }

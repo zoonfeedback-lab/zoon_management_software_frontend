@@ -1,0 +1,13 @@
+
+> zoon-client-portal@0.1.0 dev
+> next dev
+
+   ▲ Next.js 15.3.1
+   - Local:        http://localhost:3001
+   - Network:      http://192.168.1.10:3001
+
+ ✓ Starting...
+ ✓ Ready in 4.3s
+ ○ Compiling /auth/login ...
+ ✓ Compiled /auth/login in 2.1s (667 modules)
+ POST /auth/login 200 in 2807ms
