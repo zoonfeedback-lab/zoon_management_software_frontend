@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { api } from "@/lib/api";
+import { GhostButton, PrimaryButton } from "@/components/ui";
 
 export default function MyTasksClient() {
   const [tasks, setTasks] = useState<any[]>([]);
@@ -70,14 +71,14 @@ export default function MyTasksClient() {
            <p className="text-zinc-400 font-medium tracking-wide">7 Tasks remaining for Sprint 24A • Q3 Execution</p>
         </div>
         <div className="flex gap-4">
-           <button className="flex items-center gap-3 px-6 py-2.5 bg-[#171719] border border-white/5 hover:bg-white/5 transition-colors text-white text-xs font-black tracking-widest uppercase rounded">
+           <GhostButton className="flex items-center gap-3">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
               FILTER
-           </button>
-           <button className="flex items-center gap-3 px-6 py-2.5 bg-[#ff2026] hover:bg-[#ff343a] transition-colors text-white text-xs font-black tracking-widest uppercase rounded">
+           </GhostButton>
+           <PrimaryButton>
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
               ADD TASK
-           </button>
+           </PrimaryButton>
         </div>
       </div>
 
@@ -219,9 +220,7 @@ export default function MyTasksClient() {
                      <div className="text-[8px] font-black text-zinc-500 uppercase tracking-widest">LATENCY: 24MS • UPTIME: 99.9%</div>
                   </div>
                </div>
-               <button className="w-full bg-[#121214] border border-white/5 hover:bg-white/5 transition-colors text-white font-bold text-[9px] uppercase tracking-widest py-3 rounded">
-                  VIEW FULL SYSTEM LOGS
-               </button>
+               <GhostButton className="w-full">VIEW FULL SYSTEM LOGS</GhostButton>
             </div>
          </div>
       </div>
