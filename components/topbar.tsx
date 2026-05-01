@@ -53,31 +53,23 @@ export function Topbar({ sectionTitle }: { sectionTitle?: string }) {
           </h2>
         </div>
 
-        <div className="flex items-center gap-6">
-          <div className="flex items-center gap-2 border-r border-white/5 pr-6">
-            <button aria-label="Notifications" className="grid h-9 w-9 place-items-center rounded-lg transition hover:bg-white/5">
-              <BellIcon />
-            </button>
-            <button 
-              onClick={handleLogout}
-              title="Terminate Session"
-              className="grid h-9 w-9 place-items-center rounded-lg transition hover:bg-brand/10 text-brand"
-            >
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
-            </button>
-          </div>
+        <div className="flex items-center gap-4">
+          <button aria-label="Notifications" className="grid h-9 w-9 place-items-center rounded-lg text-zinc-400 transition hover:bg-white/5 hover:text-white">
+            <BellIcon />
+          </button>
+          <button 
+            onClick={handleLogout}
+            title="Terminate Session"
+            className="grid h-9 w-9 place-items-center rounded-lg text-[#ff2026]/70 transition hover:bg-[#ff2026]/10 hover:text-[#ff2026]"
+          >
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+          </button>
           
-          <div className="flex items-center gap-3">
-            <div className="text-right hidden sm:block">
-              <div className="text-xs font-bold text-white">{user?.fullName || "Synchronizing..."}</div>
-              <div className="text-[10px] font-medium uppercase tracking-wider text-[#9897a1]">{user?.role?.name || "Accessing..."}</div>
-            </div>
-            <div className="relative h-10 w-10 overflow-hidden rounded-lg bg-zinc-900 border border-white/10 p-0.5 shadow-xl">
-               <div className="h-full w-full rounded-md bg-zinc-800 flex items-center justify-center text-xs font-bold text-white">
-                  {user?.fullName?.split(' ').map((n:any) => n[0]).join('') || '?'}
-               </div>
-               <div className="absolute bottom-0.5 right-0.5 h-2.5 w-2.5 rounded-full border-2 border-[#0b0b0d] bg-success animate-pulse" />
-            </div>
+          <div className="relative ml-2 h-9 w-9 overflow-hidden rounded-lg bg-zinc-900 border border-white/10 p-0.5 shadow-xl group cursor-pointer hover:border-brand/40 transition-colors">
+             <div className="h-full w-full rounded-md bg-zinc-800 flex items-center justify-center text-[10px] font-black text-white italic">
+                {user?.fullName?.split(' ').map((n:any) => n[0]).join('') || '?'}
+             </div>
+             <div className="absolute bottom-0 right-0 h-2.5 w-2.5 rounded-full border-2 border-[#0b0b0d] bg-success" />
           </div>
         </div>
       </div>

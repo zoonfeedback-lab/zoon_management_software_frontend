@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Section, StatusBadge, ProgressBar } from "@/components/ui";
+import { Section, StatusBadge, ProgressBar, Loader } from "@/components/ui";
 import { api } from "@/lib/api";
 
 interface Task {
@@ -38,7 +38,7 @@ export default function EmployeeDashboardClient() {
   }, []);
 
   if (loading) {
-    return <div className="flex h-screen items-center justify-center text-mute uppercase tracking-[0.2em] font-black">Synchronizing Mission Queue...</div>;
+    return <div className="flex h-screen items-center justify-center"><Loader /></div>;
   }
 
   const pendingTasks = tasks.filter(t => t.status !== 'DONE');

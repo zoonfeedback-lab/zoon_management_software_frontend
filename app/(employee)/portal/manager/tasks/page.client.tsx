@@ -1,63 +1,64 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { api } from "@/lib/api";
 
 export default function MyTasksClient() {
-  const [tasks] = useState([
-    {
-      id: 1,
-      title: "Finalize API Security Architecture",
-      desc: "Review OAuth2 implementation with the backend team.",
-      project: "NEON-ALPHA",
-      priority: "CRITICAL",
-      priorityColor: "border-[#ff2026] text-[#ff2026]",
-      dotColor: "bg-[#ff2026]",
-      status: "IN PROGRESS",
-      deadline: "DUE TODAY",
-      deadlineColor: "text-[#ff2026]",
-      icon: "progress"
-    },
-    {
-      id: 2,
-      title: "Sprint Planning - Phase 4",
-      desc: "Assign resources and define milestones for Q4 rollout.",
-      project: "OPERATIONS",
-      priority: "HIGH",
-      priorityColor: "border-white/80 text-white",
-      dotColor: "bg-white",
-      status: "TODO",
-      deadline: "OCT 24",
-      deadlineColor: "text-zinc-500",
-      icon: "todo"
-    },
-    {
-      id: 3,
-      title: "Update Risk Assessment Log",
-      desc: "Include recent compliance updates from legal department.",
-      project: "COMPLIANCE",
-      priority: "MEDIUM",
-      priorityColor: "border-zinc-600 text-zinc-500",
-      dotColor: "bg-zinc-600",
-      status: "TODO",
-      deadline: "OCT 28",
-      deadlineColor: "text-zinc-500",
-      icon: "todo"
-    },
-    {
-      id: 4,
-      title: "Draft Stakeholder Report",
-      desc: "Internal memo regarding performance metrics.",
-      project: "REPORTING",
-      priority: "LOW",
-      priorityColor: "border-zinc-700 text-zinc-600",
-      dotColor: "bg-zinc-700",
-      status: "COMPLETED",
-      deadline: "YESTERDAY",
-      deadlineColor: "text-zinc-600",
-      icon: "done",
-      completed: true
-    }
-  ]);
+  const [tasks, setTasks] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchTasks = async () => {
+      try {
+        const response = await api.get('/project-manager/my-tasks');
+        const data = await response.json();
+        
+        if (!response.ok) throw new Error(data.message || 'Failed to load tasks');
+        
+        const mappedTasks = (data.data || []).map((t: any) => {
+          const isDone = t.status === 'DONE';
+          const isBlocked = t.status === 'BLOCKED' || t.status === 'IN_PROGRESS'; // using IN_PROGRESS as example for now
+          
+          return {
+            id: t.id.substring(0, 8),
+            title: t.title,
+            desc: t.description || "No description provided.",
+            project: t.project?.name || "UNASSIGNED",
+            priority: t.priority || "MEDIUM",
+            priorityColor: t.priority === 'CRITICAL' ? "border-[#ff2026] text-[#ff2026]" : (t.priority === 'HIGH' ? "border-white/80 text-white" : "border-zinc-600 text-zinc-500"),
+            dotColor: t.priority === 'CRITICAL' ? "bg-[#ff2026]" : (t.priority === 'HIGH' ? "bg-white" : "bg-zinc-600"),
+            status: t.status,
+            deadline: t.dueDate ? new Date(t.dueDate).toLocaleDateString() : "NO DUE DATE",
+            deadlineColor: isDone ? "text-zinc-600" : (t.priority === 'CRITICAL' ? "text-[#ff2026]" : "text-zinc-500"),
+            icon: isDone ? "done" : (isBlocked ? "progress" : "todo"),
+            completed: isDone
+          };
+        });
+        
+        setTasks(mappedTasks);
+      } catch (err: any) {
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchTasks();
+  }, []);
+
+  if (loading) {
+    return <div className="flex h-screen items-center justify-center text-zinc-500 font-black uppercase tracking-[0.2em]">Synchronizing Tasks...</div>;
+  }
+
+  if (error) {
+    return <div className="flex h-screen items-center justify-center text-[#ff2026] font-black uppercase tracking-[0.2em]">{error}</div>;
+  }
+
+  const todoCount = tasks.filter(t => t.status === 'TODO').length;
+  const inProgressCount = tasks.filter(t => t.status === 'IN_PROGRESS').length;
+  const reviewCount = tasks.filter(t => t.status === 'REVISION' || t.status === 'REVIEW').length;
+  const doneCount = tasks.filter(t => t.status === 'DONE').length;
 
   return (
     <div className="p-8 md:p-10 max-w-[1600px] mx-auto flex flex-col gap-8 h-full overflow-y-auto bg-[#09090b]">
@@ -84,20 +85,20 @@ export default function MyTasksClient() {
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
          <div className="bg-[#171719] border border-white/5 p-6 flex flex-col justify-between h-[100px] rounded">
             <div className="text-[10px] font-black text-zinc-500 tracking-widest uppercase">TODO</div>
-            <div className="text-3xl font-medium text-white">04</div>
+            <div className="text-3xl font-medium text-white">{todoCount.toString().padStart(2, '0')}</div>
          </div>
-         <div className="bg-[#171719] border border-[#ff2026] p-6 flex flex-col justify-between h-[100px] rounded relative">
-            <div className="absolute top-4 right-4 text-[#ff2026] font-black text-xs">!</div>
-            <div className="text-[10px] font-black text-[#ff2026] tracking-widest uppercase">IN PROGRESS</div>
-            <div className="text-3xl font-medium text-white">02</div>
+         <div className={`bg-[#171719] border ${inProgressCount > 0 ? 'border-[#ff2026]' : 'border-white/5'} p-6 flex flex-col justify-between h-[100px] rounded relative`}>
+            {inProgressCount > 0 && <div className="absolute top-4 right-4 text-[#ff2026] font-black text-xs">!</div>}
+            <div className={`text-[10px] font-black tracking-widest uppercase ${inProgressCount > 0 ? 'text-[#ff2026]' : 'text-zinc-500'}`}>IN PROGRESS</div>
+            <div className="text-3xl font-medium text-white">{inProgressCount.toString().padStart(2, '0')}</div>
          </div>
          <div className="bg-[#171719] border border-white/5 p-6 flex flex-col justify-between h-[100px] rounded">
             <div className="text-[10px] font-black text-zinc-500 tracking-widest uppercase">REVIEW</div>
-            <div className="text-3xl font-medium text-white">01</div>
+            <div className="text-3xl font-medium text-white">{reviewCount.toString().padStart(2, '0')}</div>
          </div>
          <div className="bg-[#171719] border border-white/5 p-6 flex flex-col justify-between h-[100px] rounded">
             <div className="text-[10px] font-black text-zinc-500 tracking-widest uppercase">DONE</div>
-            <div className="text-3xl font-medium text-white">128</div>
+            <div className="text-3xl font-medium text-white">{doneCount.toString().padStart(2, '0')}</div>
          </div>
       </div>
 

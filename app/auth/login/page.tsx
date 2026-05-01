@@ -33,14 +33,8 @@ export default function LoginPage() {
       // Store the token
       localStorage.setItem("access_token", data.data.accessToken);
       
-      const role = data.data.user.role.key;
-      if (role === "ADMIN") {
-        router.push("/overview");
-      } else if (role === "CLIENT") {
-        router.push("/client/dashboard");
-      } else {
-        router.push("/portal/dashboard");
-      }
+      // Navigate to root (which redirects to admin overview)
+      router.push("/");
     } catch (err: any) {
       setError(err.message);
     } finally {
