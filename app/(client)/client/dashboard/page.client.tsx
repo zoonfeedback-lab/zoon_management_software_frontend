@@ -1,7 +1,11 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { api } from "@/lib/api";
+import { Loader } from "@/components/ui";
+
 type NavItem = {
   id: string;
   label: string;
@@ -48,71 +52,6 @@ const navItems: NavItem[] = [
   { id: "notifications", label: "Notifications", href: "/client/notifications" },
 ];
 
-const overviewCards: OverviewCard[] = [
-  { id: "projects", label: "Active Projects", value: 3, status: "LIVE", color: "red" },
-  { id: "approvals", label: "Approvals", value: 5, status: "PENDING", color: "amber" },
-  { id: "tasks", label: "Open Tasks", value: 12, status: "OPEN", color: "gray" },
-  { id: "alerts", label: "Unread Alerts", value: 8, status: "NEW", color: "red" },
-];
-
-const completionItems: CompletionItem[] = [
-  { id: "phoenix", title: "Operation Phoenix", subtitle: "Infrastructure Redesign", value: 75 },
-  { id: "ledger", title: "Core Ledger v4", subtitle: "Fintech Migration", value: 42 },
-  { id: "security", title: "Security Audit", subtitle: "Final Compliance Phase", value: 90 },
-];
-
-const activityItems: ActivityItem[] = [
-  {
-    id: "a1",
-    title: "New Comment on Security Audit",
-    description: "The compliance documentation has been updated to reflect Q3 requirements.",
-    meta: "2 minutes ago",
-    tone: "red",
-  },
-  {
-    id: "a2",
-    title: "Project Operation Phoenix status changed",
-    description: "Transitioned from DEVELOPMENT to TESTING.",
-    meta: "1 hour ago",
-    tone: "gray",
-  },
-  {
-    id: "a3",
-    title: "Approval Granted",
-    description: "Frontend UI kit approved by Project Lead.",
-    meta: "4 hours ago",
-    tone: "red",
-  },
-  {
-    id: "a4",
-    title: "New Task Added",
-    description: "API documentation updates added to Core Ledger v4.",
-    meta: "Yesterday",
-    tone: "gray",
-  },
-];
-
-const milestoneItems: MilestoneItem[] = [
-  {
-    id: "m1",
-    title: "Database Optimization",
-    project: "Operation Phoenix",
-    assignees: ["AL", "QD"],
-    deadline: "Oct 24, 2023",
-    chip: "Urgent",
-    chipTone: "red",
-  },
-  {
-    id: "m2",
-    title: "Vulnerability Patching",
-    project: "Security Audit",
-    assignees: ["NS"],
-    deadline: "Nov 02, 2023",
-    chip: "Planned",
-    chipTone: "gray",
-  },
-];
-
 function cn(...classes: Array<string | false | null | undefined>) {
   return classes.filter(Boolean).join(" ");
 }
@@ -144,13 +83,71 @@ function CircularProgress({ value }: { value: number }) {
 }
 
 export default function ClientDashboardClient() {
+  const router = useRouter();
   const [activeNav, setActiveNav] = useState("dashboard");
   const [searchValue, setSearchValue] = useState("");
+  const [data, setData] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchDashboard = async () => {
+      try {
+        const res = await api.get("/client/dashboard");
+        if (res.ok) {
+          const json = await res.json();
+          setData(json.data);
+        } else if (res.status === 401 || res.status === 403) {
+          router.push("/auth/login?error=Session Expired");
+        }
+      } catch (err) {
+        console.error("Dashboard sync failed:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchDashboard();
+  }, [router]);
+
+  const overviewCards = useMemo(() => {
+    if (!data) return [];
+    return [
+      { id: "projects", label: "Active Projects", value: data.metrics.activeProjects, status: "LIVE", color: "red" as const },
+      { id: "approvals", label: "Approvals", value: data.metrics.pendingApprovals, status: "PENDING", color: "amber" as const },
+      { id: "tasks", label: "Open Tasks", value: data.taskProgress.reduce((sum: number, t: any) => t.status !== 'DONE' ? sum + t._count._all : sum, 0), status: "OPEN", color: "gray" as const },
+      { id: "alerts", label: "Unread Alerts", value: data.metrics.unreadNotifications, status: "NEW", color: "red" as const },
+    ];
+  }, [data]);
+
+  const activityItems = useMemo(() => {
+    if (!data) return [];
+    return data.recentUpdates.map((update: any) => ({
+      id: update.id,
+      title: `Project ${update.name} updated`,
+      description: `Current status is ${update.status}. Check the project board for detailed logs.`,
+      meta: new Date(update.updatedAt).toLocaleTimeString(),
+      tone: update.status === 'ACTIVE' ? "red" : "gray",
+    }));
+  }, [data]);
+
+  const completionItems = useMemo(() => {
+    if (!data) return [];
+    // Calculate simple completion for first 3 projects for the index
+    return data.recentUpdates.slice(0, 3).map((p: any) => ({
+      id: p.id,
+      title: p.name,
+      subtitle: "System Node",
+      value: p.status === 'COMPLETED' ? 100 : p.status === 'ACTIVE' ? 65 : 10,
+    }));
+  }, [data]);
 
   const completionSummary = useMemo(() => {
-    const total = completionItems.reduce((sum, item) => sum + item.value, 0);
+    if (completionItems.length === 0) return 0;
+    const total = completionItems.reduce((sum: number, item: any) => sum + item.value, 0);
     return Math.round(total / completionItems.length);
-  }, []);
+  }, [completionItems]);
+
+  if (loading) return <div className="h-screen bg-[#050608] flex items-center justify-center"><Loader /></div>;
+  if (!data) return <div className="h-screen bg-[#050608] flex items-center justify-center text-white">ACCESS DENIED: Session Expired</div>;
 
   return (
     <main className="h-screen bg-[#050608] text-white">
@@ -185,9 +182,9 @@ export default function ClientDashboardClient() {
             <div className="rounded-xl border border-[#1d2028] bg-[#0f131c] p-3">
               <div className="flex items-center gap-3">
                 <div className="flex size-9 items-center justify-center rounded-full bg-[#101722] text-xs font-bold text-[#7cc6ff]">👤</div>
-                <div>
-                  <p className="text-sm font-semibold text-[#e5e9f1]">Premium Client</p>
-                  <p className="text-[10px] uppercase tracking-[0.14em] text-[#7c818d]">ID: #8892-XT</p>
+                <div className="overflow-hidden">
+                  <p className="truncate text-sm font-semibold text-[#e5e9f1]">{data.client.companyName}</p>
+                  <p className="text-[10px] uppercase tracking-[0.14em] text-[#7c818d]">ID: #{data.client.id.split('-')[0]}</p>
                 </div>
               </div>
             </div>
@@ -210,9 +207,14 @@ export default function ClientDashboardClient() {
             <div className="flex items-center gap-2">
               <button
                 aria-label="Notifications"
-                className="flex size-9 items-center justify-center rounded-md border border-[#2a2f39] bg-[#11151d] text-[#cfd4df] hover:border-[#3a404b]"
+                className="relative flex size-9 items-center justify-center rounded-md border border-[#2a2f39] bg-[#11151d] text-[#cfd4df] hover:border-[#3a404b]"
               >
                 🔔
+                {data.metrics.unreadNotifications > 0 && (
+                  <span className="absolute -right-1 -top-1 flex size-4 items-center justify-center rounded-full bg-brand text-[8px] font-bold text-white">
+                    {data.metrics.unreadNotifications}
+                  </span>
+                )}
               </button>
               <button
                 aria-label="Settings"
@@ -301,41 +303,31 @@ export default function ClientDashboardClient() {
               </div>
 
               <div className="space-y-3">
-                {milestoneItems.map((item) => (
-                  <div key={item.id} className="grid grid-cols-[1.4fr_0.9fr_0.8fr_0.5fr] items-center gap-3 rounded-lg border border-[#1b1f28] bg-[#0f131b] p-4">
+                {data.recentUpdates.slice(0, 3).map((item: any) => (
+                  <div key={item.id} className="grid grid-cols-[1.4fr_0.8fr_0.5fr] items-center gap-3 rounded-lg border border-[#1b1f28] bg-[#0f131b] p-4">
                     <div>
-                      <p className="text-[24px] font-black leading-none text-[#f1f4fa]">{item.title}</p>
-                      <p className="mt-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-[#7e8491]">{item.project}</p>
+                      <p className="text-[24px] font-black leading-none text-[#f1f4fa]">{item.name}</p>
+                      <p className="mt-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-[#7e8491]">System Node</p>
                     </div>
                     <div>
-                      <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-[#767d89]">Assigned To:</p>
-                      <div className="mt-2 flex -space-x-2">
-                        {item.assignees.map((person) => (
-                          <span
-                            key={person}
-                            className="flex size-8 items-center justify-center rounded-full border border-[#0e1118] bg-[#202735] text-[10px] font-bold text-[#bed4ff]"
-                          >
-                            {person}
-                          </span>
-                        ))}
-                      </div>
-                    </div>
-                    <div>
-                      <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-[#767d89]">Deadline</p>
-                      <p className="mt-1 text-[18px] font-bold uppercase text-[#d7dce6]">{item.deadline}</p>
+                      <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-[#767d89]">Last Sync</p>
+                      <p className="mt-1 text-[18px] font-bold uppercase text-[#d7dce6]">{new Date(item.updatedAt).toLocaleDateString()}</p>
                     </div>
                     <div className="flex justify-end">
                       <span
                         className={cn(
                           "rounded-full px-3 py-1 text-[10px] font-black uppercase tracking-[0.13em]",
-                          item.chipTone === "red" ? "bg-[#38161a] text-[#f04f57]" : "bg-[#232831] text-[#c2c8d1]",
+                          item.status === 'ACTIVE' ? "bg-[#38161a] text-[#f04f57]" : "bg-[#232831] text-[#c2c8d1]",
                         )}
                       >
-                        {item.chip}
+                        {item.status}
                       </span>
                     </div>
                   </div>
                 ))}
+                {data.recentUpdates.length === 0 && (
+                   <div className="py-8 text-center text-[10px] font-bold uppercase tracking-widest text-[#6d727f]">No active project signals.</div>
+                )}
               </div>
             </article>
           </div>

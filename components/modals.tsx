@@ -936,7 +936,16 @@ export function CreateTaskModal({
         </div>
 
         <div className="grid gap-2">
-          <label className="text-xs font-black uppercase tracking-widest text-[#9897a1]">Description</label>
+          <div className="flex items-center justify-between">
+            <label className="text-xs font-black uppercase tracking-widest text-[#9897a1]">Description</label>
+            <label className="group flex cursor-pointer items-center gap-2 text-[10px] font-black uppercase tracking-widest text-[#ff2026] hover:text-[#ff343a]">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" className="transition-transform group-hover:-translate-y-0.5">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/>
+              </svg>
+              Upload Attachments
+              <input type="file" className="hidden" multiple />
+            </label>
+          </div>
           <textarea
             rows={3}
             className="bg-[#0b0b0d] border border-white/10 text-white px-4 py-3 rounded-lg focus:border-brand/30 outline-none resize-none"

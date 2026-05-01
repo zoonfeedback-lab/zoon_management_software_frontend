@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { GhostButton, ProgressBar, Section, StatusBadge } from "@/components/ui";
+import { GhostButton, ProgressBar, Section, StatusBadge, Loader } from "@/components/ui";
 import { CreateProjectModal } from "@/components/modals";
 
 import { api } from "@/lib/api";
@@ -59,7 +59,7 @@ export default function OverviewClient() {
   }, []);
 
   if (loading) {
-    return <div className="flex h-[400px] items-center justify-center text-mute uppercase tracking-[0.2em]">Synchronizing Command Center...</div>;
+    return <div className="flex h-[400px] items-center justify-center"><Loader /></div>;
   }
 
   const metrics = [

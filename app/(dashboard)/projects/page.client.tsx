@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { GhostButton, ProgressBar, Section, StatusBadge } from "@/components/ui";
+import { GhostButton, ProgressBar, Section, StatusBadge, Loader } from "@/components/ui";
 
 import { api } from "@/lib/api";
 
@@ -51,7 +51,7 @@ export default function ProjectsClient() {
   ];
 
   if (loading) {
-    return <div className="flex h-[400px] items-center justify-center text-mute uppercase tracking-widest">Initialising Grid...</div>;
+    return <div className="flex h-[400px] items-center justify-center"><Loader /></div>;
   }
 
   return (
@@ -65,8 +65,7 @@ export default function ProjectsClient() {
             Monitor deployment status, resource allocation, and technical velocity across the engineering organization.
           </p>
         </div>
-        <div className="flex flex-wrap gap-4">
-          <GhostButton className="rounded-lg">Export Board</GhostButton>
+        <div className="flex flex-col gap-3 min-w-[200px]">
           <Link
             href="/projects/create"
             className="inline-flex items-center justify-center gap-3 bg-[#ff2026] px-6 py-3.5 text-sm font-bold uppercase tracking-wider text-white transition hover:bg-[#ff343a] rounded-lg shadow-[0_4px_14px_rgba(255,32,38,0.3)]"
@@ -74,6 +73,9 @@ export default function ProjectsClient() {
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
             Create Project
           </Link>
+          <GhostButton className="rounded-lg px-6 py-3.5 text-sm tracking-wider w-full border-white/10 hover:border-white/30">
+             Export Board
+          </GhostButton>
         </div>
       </div>
 

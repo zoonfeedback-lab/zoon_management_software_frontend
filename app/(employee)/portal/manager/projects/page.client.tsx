@@ -1,21 +1,77 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { api } from "@/lib/api";
 
 export default function MyProjectsClient() {
-  const [team] = useState([
-    { id: 1, name: "ELARA_VANCE", role: "LEAD_ENGINEER", initials: "EV", bg: "bg-emerald-900" },
-    { id: 2, name: "KAL_SHERMAN", role: "ARCHITECT", initials: "KS", bg: "bg-blue-900" },
-    { id: 3, name: "MARCUS_CHEN", role: "DEVOPS_LEAD", initials: "MC", bg: "bg-orange-900" },
-    { id: 4, name: "SARAH_JENKINS", role: "QA_ANALYST", initials: "SJ", bg: "bg-zinc-800", icon: true },
-  ]);
+  const [project, setProject] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  const [tasks] = useState([
-    { id: "#TK-402", desc: "Initialize Neural Core V2.4", owner: "ELARA_VANCE", status: "BLOCKED", statusColor: "bg-[#ff2026]", priority: "URGENT", priorityStyle: "border-[#ff2026] text-[#ff2026]" },
-    { id: "#TK-405", desc: "PostgreSQL Sharding Strategy", owner: "KAI_SHERMAN", status: "ACTIVE", statusColor: "bg-white", priority: "HIGH", priorityStyle: "border-white/40 text-white/80" },
-    { id: "#TK-409", desc: "AWS Lambda Optimization", owner: "MARCUS_CHEN", status: "BACKLOG", statusColor: "bg-zinc-600", priority: "MEDIUM", priorityStyle: "border-zinc-600 text-zinc-500" },
-    { id: "#TK-412", desc: "Security Patch Deployment", owner: "SARAH_JENKINS", status: "ACTIVE", statusColor: "bg-white", priority: "URGENT", priorityStyle: "border-[#ff2026] text-[#ff2026]" },
-  ]);
+  useEffect(() => {
+    const fetchProjectData = async () => {
+      try {
+        // Get all managed projects
+        const projectsRes = await api.get('/project-manager/projects');
+        const projectsData = await projectsRes.json();
+        
+        if (!projectsRes.ok) throw new Error(projectsData.message || 'Failed to load projects');
+        
+        if (projectsData.data && projectsData.data.length > 0) {
+          // Fetch detailed info for the first project
+          const firstProjectId = projectsData.data[0].id;
+          const detailRes = await api.get(`/project-manager/projects/${firstProjectId}`);
+          const detailData = await detailRes.json();
+          
+          if (!detailRes.ok) throw new Error(detailData.message || 'Failed to load project details');
+          
+          setProject(detailData.data);
+        } else {
+          setProject(null); // No projects found
+        }
+      } catch (err: any) {
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchProjectData();
+  }, []);
+
+  if (loading) {
+    return <div className="flex h-screen items-center justify-center text-zinc-500 font-black uppercase tracking-[0.2em]">Loading Project Matrix...</div>;
+  }
+
+  if (error) {
+    return <div className="flex h-screen items-center justify-center text-[#ff2026] font-black uppercase tracking-[0.2em]">{error}</div>;
+  }
+
+  if (!project) {
+    return <div className="flex h-screen items-center justify-center text-zinc-500 font-black uppercase tracking-[0.2em]">No Active Projects Found</div>;
+  }
+
+  const team = project.members?.map((m: any, i: number) => ({
+    id: m.id,
+    name: m.user.fullName,
+    role: m.user.jobTitle || "ENGINEER",
+    initials: m.user.fullName.substring(0, 2).toUpperCase(),
+    bg: ["bg-emerald-900", "bg-blue-900", "bg-orange-900", "bg-zinc-800"][i % 4]
+  })) || [];
+
+  const tasks = project.tasks?.map((t: any) => {
+    const isBlocked = t.status === 'BLOCKED'; // Add actual logic if status enum differs
+    const isDone = t.status === 'DONE';
+    return {
+      id: t.id.substring(0, 8), // shorten UUID
+      desc: t.title,
+      owner: t.assignedTo?.fullName || "UNASSIGNED",
+      status: t.status,
+      statusColor: isBlocked ? "bg-[#ff2026]" : (isDone ? "bg-emerald-500" : "bg-white"),
+      priority: t.priority || "MEDIUM",
+      priorityStyle: t.priority === 'CRITICAL' || t.priority === 'URGENT' ? "border-[#ff2026] text-[#ff2026]" : (t.priority === 'HIGH' ? "border-white/40 text-white/80" : "border-zinc-600 text-zinc-500")
+    };
+  }) || [];
 
   return (
     <div className="p-8 md:p-10 max-w-[1600px] mx-auto grid gap-6 h-full overflow-y-auto bg-[#09090b]">
@@ -36,9 +92,9 @@ export default function MyProjectsClient() {
                  <span className="bg-transparent border border-white/20 text-white/60 px-3 py-1 text-[9px] font-black tracking-widest uppercase">SPRINT 24</span>
               </div>
               
-              <h1 className="text-4xl md:text-5xl font-black text-white tracking-tight mb-4 relative z-10">PROJECT_ALPHA_X7</h1>
+              <h1 className="text-4xl md:text-5xl font-black text-white tracking-tight mb-4 relative z-10">{project.name || "PROJECT_ALPHA_X7"}</h1>
               <p className="text-zinc-400 text-lg md:text-xl font-medium leading-relaxed max-w-2xl relative z-10">
-                 Deep learning architecture for automated resource allocation and performance monitoring in hybrid cloud environments.
+                 {project.description || "Deep learning architecture for automated resource allocation and performance monitoring in hybrid cloud environments."}
               </p>
            </div>
 
@@ -47,16 +103,16 @@ export default function MyProjectsClient() {
                  <div className="text-[9px] font-black text-zinc-500 tracking-widest uppercase mb-2">HEALTH_STATUS</div>
                  <div className="flex items-center gap-3">
                     <div className="w-2.5 h-2.5 bg-[#ff2026] shadow-[0_0_10px_rgba(255,32,38,0.5)]" />
-                    <span className="text-white font-bold tracking-widest uppercase">OPTIMIZED</span>
+                    <span className="text-white font-bold tracking-widest uppercase">{project.status === 'COMPLETED' ? 'COMPLETED' : 'OPTIMIZED'}</span>
                  </div>
               </div>
               <div className="flex-1 max-w-xs">
                  <div className="flex items-center justify-between mb-2">
                     <span className="text-[9px] font-black text-zinc-500 tracking-widest uppercase">COMPLETION</span>
-                    <span className="text-white font-bold">74%</span>
+                    <span className="text-white font-bold">{project.status === 'COMPLETED' ? '100%' : '74%'}</span>
                  </div>
                  <div className="h-1.5 w-full bg-zinc-800 flex">
-                    <div className="h-full bg-[#ff2026] w-[74%] shadow-[0_0_10px_rgba(255,32,38,0.5)]" />
+                    <div className="h-full bg-[#ff2026] shadow-[0_0_10px_rgba(255,32,38,0.5)]" style={{ width: project.status === 'COMPLETED' ? '100%' : '74%' }} />
                  </div>
               </div>
            </div>
@@ -82,14 +138,19 @@ export default function MyProjectsClient() {
 
            <div className="bg-[#171719] border border-white/5 p-6 col-span-2 flex items-center justify-between">
               <div className="flex -space-x-3">
-                 <div className="w-10 h-10 rounded-full bg-emerald-900 border-2 border-[#171719] grid place-items-center text-xs font-bold text-white relative z-30 shadow-md">EV</div>
-                 <div className="w-10 h-10 rounded-full bg-blue-900 border-2 border-[#171719] grid place-items-center text-xs font-bold text-white relative z-20 shadow-md">KS</div>
-                 <div className="w-10 h-10 rounded-full bg-orange-900 border-2 border-[#171719] grid place-items-center text-xs font-bold text-white relative z-10 shadow-md">MC</div>
-                 <div className="w-10 h-10 rounded-full bg-zinc-800 border-2 border-[#171719] grid place-items-center text-[10px] font-black text-zinc-400 relative z-0">+8</div>
+                 {team.slice(0, 3).map((m: any, i: number) => (
+                    <div key={m.id} className={`w-10 h-10 rounded-full ${m.bg} border-2 border-[#171719] grid place-items-center text-xs font-bold text-white relative shadow-md`} style={{ zIndex: 30 - i }}>{m.initials}</div>
+                 ))}
+                 {team.length > 3 && (
+                    <div className="w-10 h-10 rounded-full bg-zinc-800 border-2 border-[#171719] grid place-items-center text-[10px] font-black text-zinc-400 relative z-0">+{team.length - 3}</div>
+                 )}
+                 {team.length === 0 && (
+                    <div className="w-10 h-10 rounded-full bg-zinc-800 border-2 border-[#171719] grid place-items-center text-[10px] font-black text-zinc-400 relative z-0">0</div>
+                 )}
               </div>
               <div className="text-right">
                  <div className="text-[9px] font-black text-zinc-500 tracking-widest uppercase mb-1">ACTIVE_ENGINEERS</div>
-                 <div className="text-lg font-bold text-white uppercase">11_UNITS</div>
+                 <div className="text-lg font-bold text-white uppercase">{team.length}_UNITS</div>
               </div>
            </div>
         </div>

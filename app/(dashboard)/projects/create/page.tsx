@@ -3,14 +3,15 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { GhostButton, Section } from "@/components/ui";
+import { GhostButton, Section, Loader } from "@/components/ui";
+import { api } from "@/lib/api";
 
 interface Client {
   id: string;
   companyName: string;
 }
 
-interface Employee {
+interface User {
   id: string;
   fullName: string;
 }
@@ -18,7 +19,7 @@ interface Employee {
 export default function CreateProjectPage() {
   const router = useRouter();
   const [clients, setClients] = useState<Client[]>([]);
-  const [employees, setEmployees] = useState<Employee[]>([]);
+  const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
@@ -35,25 +36,22 @@ export default function CreateProjectPage() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const token = localStorage.getItem("access_token");
-        const headers = { Authorization: `Bearer ${token}` };
-
-        const [clientsRes, employeesRes] = await Promise.all([
-          fetch("/api/clients", { headers }),
-          fetch("/api/employees", { headers }),
+        const [clientsRes, usersRes] = await Promise.all([
+          api.get("/clients"),
+          api.get("/users"),
         ]);
 
-        if (!clientsRes.ok || !employeesRes.ok) {
+        if (!clientsRes.ok || !usersRes.ok) {
           throw new Error("Failed to fetch initial data");
         }
 
-        const [clientsData, employeesData] = await Promise.all([
+        const [clientsData, usersData] = await Promise.all([
           clientsRes.json(),
-          employeesRes.json(),
+          usersRes.json(),
         ]);
 
         setClients(clientsData.data || []);
-        setEmployees(employeesData.data || []);
+        setUsers(usersData.data || []);
       } catch (err: any) {
         setError(err.message);
       } finally {
@@ -70,15 +68,7 @@ export default function CreateProjectPage() {
     setError("");
 
     try {
-      const token = localStorage.getItem("access_token");
-      const response = await fetch("/api/projects", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify(formData),
-      });
+      const response = await api.post("/projects", formData);
 
       if (!response.ok) {
         const data = await response.json();
@@ -103,7 +93,7 @@ export default function CreateProjectPage() {
   };
 
   if (loading) {
-    return <div className="flex h-[400px] items-center justify-center text-mute uppercase tracking-[0.2em]">Synchronizing Command Center...</div>;
+    return <div className="flex h-[400px] items-center justify-center"><Loader /></div>;
   }
 
   return (
@@ -206,7 +196,7 @@ export default function CreateProjectPage() {
           <div className="grid gap-2">
             <span className="text-[10px] font-black uppercase tracking-[0.2em] text-[#9897a1]">Engineering Squad</span>
             <div className="grid gap-2 max-h-48 overflow-y-auto rounded-lg border border-white/5 bg-[#0b0b0d] p-4">
-               {employees.map(emp => (
+               {users.map(emp => (
                  <label key={emp.id} className="flex items-center gap-3 cursor-pointer group">
                     <input 
                       type="checkbox" 

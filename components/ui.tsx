@@ -245,3 +245,14 @@ export function BarChart({ data }: BarChartProps) {
     </div>
   );
 }
+
+export function Loader({ className = "" }: { className?: string }) {
+  return (
+    <div className={`flex flex-col items-center justify-center ${className}`}>
+      <div className="relative size-10">
+        <div className="absolute inset-0 rounded-full border-2 border-brand/20" />
+        <div className="absolute inset-0 animate-spin rounded-full border-2 border-brand border-t-transparent shadow-[0_0_15px_rgba(255,32,38,0.3)]" />
+      </div>
+    </div>
+  );
+}
