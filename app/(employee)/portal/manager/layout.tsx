@@ -5,9 +5,9 @@ import { usePathname } from "next/navigation";
 import { ReactNode } from "react";
 
 const NAV_ITEMS = [
-  { label: "PM Workspace", href: "/portal/manager", icon: "grid" },
-  { label: "My Projects", href: "/portal/manager/projects", icon: "folder" },
-  { label: "My Tasks", href: "/portal/manager/tasks", icon: "list" },
+  { label: "Manager Dashboard", href: "/portal/manager", icon: "grid" },
+  { label: "Mission Nodes", href: "/portal/manager/projects", icon: "folder" },
+  { label: "Assignments", href: "/portal/manager/tasks", icon: "list" },
   { label: "Team", href: "/portal/manager/team", icon: "users" },
 ];
 
@@ -36,13 +36,15 @@ function NavIcon({ type, active }: { type: string; active: boolean }) {
   }
 }
 
-export default function PMPortalLayout({ children }: { children: ReactNode }) {
+export default function CommandPortalLayout({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const sectionLabel = pathname.includes("/projects")
-    ? "Project Workspace"
+    ? "Mission Nodes"
     : pathname.includes("/tasks")
-      ? "Task Command"
-      : "PM Workspace";
+      ? "Assignment Control"
+      : pathname.includes("/team")
+        ? "Operative Registry"
+        : "Manager Dashboard";
 
   return (
     <div className="grid min-h-screen bg-[#09090b] text-white md:grid-cols-[232px_minmax(0,1fr)]">
@@ -50,12 +52,12 @@ export default function PMPortalLayout({ children }: { children: ReactNode }) {
       <aside className="border-r border-white/5 bg-[#0b0b0d]">
         <div className="flex h-full flex-col gap-5 px-4 py-4">
           <div className="flex h-12 items-center border-b border-white/5 px-2">
-            <div className="text-xl font-black italic text-[#ff2026] tracking-tighter">ZOONLABS</div>
+            <div className="text-xl font-black italic text-[#ff2026] tracking-widest">ZOON</div>
           </div>
 
           <div className="rounded-xl border border-white/5 bg-[#111214] px-4 py-4">
-            <h2 className="text-[#ff2026] font-black text-sm tracking-widest uppercase mb-1">PM Portal</h2>
-            <p className="text-[9px] font-bold text-zinc-500 tracking-[0.2em] uppercase">High-Performance Engine</p>
+            <h2 className="text-[#ff2026] font-black text-sm tracking-widest uppercase mb-1">Manager Portal</h2>
+            <p className="text-[9px] font-bold text-zinc-500 tracking-[0.2em] uppercase">Operations Management Hub</p>
           </div>
 
           <nav className="grid gap-1">
@@ -65,11 +67,10 @@ export default function PMPortalLayout({ children }: { children: ReactNode }) {
                 <Link
                   key={item.href}
                   href={item.href}
-                  className={`flex items-center gap-4 rounded-lg px-4 py-3 text-xs font-bold tracking-widest uppercase transition-all ${
-                    active
+                  className={`flex items-center gap-4 rounded-lg px-4 py-3 text-xs font-bold tracking-widest uppercase transition-all ${active
                       ? "bg-[#ff2026]/10 text-[#ff2026] border border-[#ff2026]/30"
                       : "text-zinc-500 hover:text-white hover:bg-white/[0.03] border border-transparent"
-                  }`}
+                    }`}
                 >
                   <NavIcon type={item.icon} active={active} />
                   <span>{item.label}</span>
@@ -85,7 +86,7 @@ export default function PMPortalLayout({ children }: { children: ReactNode }) {
             <div className="flex items-center justify-between rounded-lg border border-white/10 bg-[#121214] px-3 py-2">
               <span className="text-[10px] font-black uppercase tracking-widest text-zinc-400">Operator</span>
               <div className="h-7 w-7 rounded-md bg-blue-600 grid place-items-center text-[10px] font-bold text-white border border-white/10 shadow-[0_0_10px_rgba(37,99,235,0.3)]">
-                PM
+                MG
               </div>
             </div>
           </div>
@@ -102,19 +103,20 @@ export default function PMPortalLayout({ children }: { children: ReactNode }) {
                 Manager / <span className="text-white">{sectionLabel}</span>
               </div>
               <div className="hidden items-center gap-6 md:flex">
-                <Link href="/portal/manager" className="text-[10px] font-black uppercase tracking-[0.2em] text-[#ff2026]">Workspaces</Link>
-                <Link href="/portal/manager/projects" className="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-500 transition-colors hover:text-white">Projects</Link>
-                <Link href="/portal/manager/tasks" className="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-500 transition-colors hover:text-white">Tasks</Link>
+                <Link href="/portal/manager" className={`text-[10px] font-black uppercase tracking-[0.2em] ${pathname === '/portal/manager' ? 'text-[#ff2026]' : 'text-zinc-500 hover:text-white transition-colors'}`}>Workspaces</Link>
+                <Link href="/portal/manager/projects" className={`text-[10px] font-black uppercase tracking-[0.2em] ${pathname.includes('/projects') ? 'text-[#ff2026]' : 'text-zinc-500 hover:text-white transition-colors'}`}>Projects</Link>
+                <Link href="/portal/manager/team" className={`text-[10px] font-black uppercase tracking-[0.2em] ${pathname.includes('/team') ? 'text-[#ff2026]' : 'text-zinc-500 hover:text-white transition-colors'}`}>Team</Link>
+                <Link href="/portal/manager/tasks" className={`text-[10px] font-black uppercase tracking-[0.2em] ${pathname.includes('/tasks') ? 'text-[#ff2026]' : 'text-zinc-500 hover:text-white transition-colors'}`}>Tasks</Link>
               </div>
             </div>
 
             <div className="flex items-center gap-3 md:gap-5">
               <div className="relative hidden md:block">
-                <svg className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500 w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+                <svg className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500 w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
                 <input type="text" placeholder="Quick Search..." className="w-[220px] rounded-lg border border-white/10 bg-[#121214] py-2 pl-10 pr-4 text-xs font-mono text-white placeholder:text-zinc-600 focus:border-[#ff2026]/50 focus:outline-none transition-colors" />
               </div>
-              <button className="grid h-9 w-9 place-items-center rounded-lg text-zinc-500 transition hover:bg-white/5 hover:text-white"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg></button>
-              <button className="grid h-9 w-9 place-items-center rounded-lg text-zinc-500 transition hover:bg-white/5 hover:text-white"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 2v3M12 19v3M4.9 4.9l2.2 2.2M16.9 16.9l2.2 2.2M2 12h3M19 12h3M4.9 19.1l2.2-2.2M16.9 7.1l2.2-2.2"/><circle cx="12" cy="12" r="3"/></svg></button>
+              <button className="grid h-9 w-9 place-items-center rounded-lg text-zinc-500 transition hover:bg-white/5 hover:text-white"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" /><path d="M13.73 21a2 2 0 0 1-3.46 0" /></svg></button>
+              <button className="grid h-9 w-9 place-items-center rounded-lg text-zinc-500 transition hover:bg-white/5 hover:text-white"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 2v3M12 19v3M4.9 4.9l2.2 2.2M16.9 16.9l2.2 2.2M2 12h3M19 12h3M4.9 19.1l2.2-2.2M16.9 7.1l2.2-2.2" /><circle cx="12" cy="12" r="3" /></svg></button>
             </div>
           </div>
         </header>
