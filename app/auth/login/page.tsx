@@ -23,18 +23,26 @@ export default function LoginPage() {
     setLoading(true);
 
     try {
-      const response = await api.post("/auth/login", { email, password });
+      const response = await api.post("/auth/employee/login", { email, password });
 
       const data = await response.json();
       if (!response.ok) {
         throw new Error(data.message || "Invalid credentials.");
       }
 
-      // Store the token
+      // If the employee is logging in for the first time with an admin-provided password
+      if (data.data.mustChangePassword) {
+        // Store a temporary token to authorize the change-password request
+        sessionStorage.setItem("temp_auth_token", data.data.accessToken);
+        router.push("/auth/change-password");
+        return;
+      }
+
+      // Normal authentication flow
       localStorage.setItem("access_token", data.data.accessToken);
       
-      // Navigate to root (which redirects to admin overview)
-      router.push("/");
+      // Navigate to the Engineering Hub / Employee Portal
+      router.push("/portal/manager/projects");
     } catch (err: any) {
       setError(err.message);
     } finally {

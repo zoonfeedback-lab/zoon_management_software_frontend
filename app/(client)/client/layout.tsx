@@ -17,6 +17,7 @@ const navItems: NavItem[] = [
   { id: "projects", label: "Projects", href: "/client/projects", icon: "⌬" },
   { id: "payments", label: "Payments", href: "/client/payments", icon: "⏣" },
   { id: "reviews", label: "Reviews", href: "/client/reviews", icon: "💬" },
+  { id: "profile", label: "Profile", href: "/client/profile", icon: "👤" },
 ];
 
 export default function ClientLayout({ children }: { children: React.ReactNode }) {
