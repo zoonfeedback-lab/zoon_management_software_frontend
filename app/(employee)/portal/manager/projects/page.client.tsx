@@ -73,7 +73,7 @@ export default function MyProjectsClient() {
           <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.3em] text-zinc-500 mb-2">
             <span className="hover:text-brand cursor-pointer transition-colors" onClick={() => setSelectedProjectId(null)}>Manager Hub</span>
             <span>/</span>
-            <span className="text-zinc-300">Mission Nodes</span>
+            <span className="text-zinc-300">Mission Logs</span>
             {project && (
               <>
                 <span>/</span>
