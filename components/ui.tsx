@@ -52,15 +52,17 @@ export function Section({
 
 export function StatusBadge({ status }: { status: string }) {
   const lower = status.toLowerCase();
-  const tone = lower.includes("paid") || lower.includes("complete")
-    ? "border-success text-success"
-    : lower.includes("pending") || lower.includes("qa")
-      ? "border-zinc-200 text-zinc-200"
-      : "border-brand text-brand";
+  const tone = lower.includes("paid") || lower.includes("complete") || lower.includes("done") || lower.includes("approved")
+    ? "border-success text-success shadow-[0_0_10px_rgba(34,197,94,0.1)]"
+    : lower.includes("pending") || lower.includes("qa") || lower.includes("review") || lower.includes("draft")
+      ? "border-zinc-400 text-zinc-400"
+      : lower.includes("reject") || lower.includes("block") || lower.includes("delay")
+        ? "border-[#ff2026] text-[#ff2026] shadow-[0_0_10px_rgba(255,32,38,0.1)]"
+        : "border-brand text-brand shadow-[0_0_10px_rgba(255,32,38,0.1)]";
 
   return (
-    <span className={`inline-flex items-center gap-2 border px-3 py-1.5 text-xs font-semibold uppercase tracking-[0.18em] ${tone}`}>
-      <span className="h-2 w-2 rounded-full bg-current" />
+    <span className={`inline-flex items-center gap-2 border px-3 py-1.5 text-[9px] font-black uppercase tracking-[0.18em] ${tone}`}>
+      <span className="h-1.5 w-1.5 rounded-full bg-current animate-pulse" />
       {status}
     </span>
   );
@@ -90,13 +92,72 @@ export function PrimaryButton({ children, className = "" }: { children: React.Re
   );
 }
 
-export function GhostButton({ children, className = "" }: { children: React.ReactNode; className?: string }) {
+export function GhostButton({ children, className = "", ...props }: React.ButtonHTMLAttributes<HTMLButtonElement>) {
   return (
     <button
-      className={`inline-flex items-center justify-center gap-2 border border-zinc-200 px-4 py-2.5 text-xs font-bold uppercase tracking-[0.16em] text-white transition hover:border-white hover:bg-white/5 md:px-5 md:py-3 md:text-sm ${className}`.trim()}
+      {...props}
+      className={`inline-flex items-center justify-center gap-2 border border-white/10 px-4 py-2.5 text-[10px] font-black uppercase tracking-[0.16em] text-white transition hover:border-white hover:bg-white/5 md:px-5 md:py-3 ${className}`.trim()}
     >
       {children}
     </button>
+  );
+}
+
+export function StatCard({ 
+  label, 
+  value, 
+  icon, 
+  trend, 
+  color = "red" 
+}: { 
+  label: string; 
+  value: string | number; 
+  icon?: React.ReactNode; 
+  trend?: string; 
+  color?: "red" | "green" | "blue" | "white" 
+}) {
+  const accent = 
+    color === "green" ? "text-success border-success/30 shadow-success/10" : 
+    color === "blue" ? "text-blue-400 border-blue-400/30 shadow-blue-400/10" : 
+    color === "white" ? "text-zinc-400 border-zinc-700 shadow-white/5" :
+    "text-[#ff2026] border-[#ff2026]/30 shadow-[#ff2026]/10";
+    
+  return (
+    <div className={`bg-[#171719] border border-white/5 border-b-2 p-5 flex flex-col justify-between h-[130px] transition-all hover:border-white/10 hover:-translate-y-1 ${accent.split(' ').slice(1).join(' ')}`}>
+      <div className="flex items-center justify-between">
+        <div className={`p-2 bg-white/5 rounded-lg ${accent.split(' ')[0]}`}>{icon}</div>
+        {trend && <span className="text-[10px] font-bold text-success">+{trend}%</span>}
+      </div>
+      <div>
+        <div className="text-[9px] font-black text-zinc-500 tracking-[0.2em] uppercase mb-1">{label}</div>
+        <div className="text-3xl font-black text-white tracking-tight leading-none">{value}</div>
+      </div>
+    </div>
+  );
+}
+
+export function AvatarGroup({ members, limit = 3 }: { members: any[]; limit?: number }) {
+  return (
+    <div className="flex -space-x-3">
+      {members.slice(0, limit).map((m, i) => {
+        const name = m.user?.fullName || m.fullName || "??";
+        return (
+          <div 
+            key={m.id || i} 
+            className="w-8 h-8 rounded-full border-2 border-[#171719] grid place-items-center text-[10px] font-black text-white relative shadow-md overflow-hidden bg-zinc-800"
+            title={name}
+            style={{ zIndex: 10 - i }}
+          >
+            {name.substring(0, 2).toUpperCase()}
+          </div>
+        );
+      })}
+      {members.length > limit && (
+        <div className="w-8 h-8 rounded-full bg-zinc-900 border-2 border-[#171719] grid place-items-center text-[9px] font-black text-zinc-500 relative z-0">
+          +{members.length - limit}
+        </div>
+      )}
+    </div>
   );
 }
 
