@@ -9,6 +9,7 @@ export default function LoginPage() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [role, setRole] = useState<"admin" | "employee">("employee");
   const router = useRouter();
 
   useEffect(() => {
@@ -23,7 +24,8 @@ export default function LoginPage() {
     setLoading(true);
 
     try {
-      const response = await api.post("/auth/employee/login", { email, password });
+      const endpoint = role === "employee" ? "/auth/employee/login" : "/auth/login";
+      const response = await api.post(endpoint, { email, password });
 
       const data = await response.json();
       if (!response.ok) {
@@ -41,8 +43,11 @@ export default function LoginPage() {
       // Normal authentication flow
       localStorage.setItem("access_token", data.data.accessToken);
       
-      // Navigate to the Engineering Hub / Employee Portal
-      router.push("/portal/manager/projects");
+      if (role === "employee") {
+        router.push("/portal/manager/projects");
+      } else {
+        router.push("/");
+      }
     } catch (err: any) {
       setError(err.message);
     } finally {
@@ -79,9 +84,26 @@ export default function LoginPage() {
               <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-transparent via-[#ff2026]/40 to-transparent" />
               
               <h1 className="text-4xl font-semibold tracking-tight text-white md:text-5xl">Sign in</h1>
-              <p className="mt-4 text-lg text-[#eac0b5]/70 md:text-xl">Access your engineering environment.</p>
+              <p className="mt-4 text-lg text-[#eac0b5]/70 md:text-xl">Access your {role === "employee" ? "engineering environment" : "command center"}.</p>
 
               <form className="mt-8 grid gap-5" onSubmit={handleSubmit}>
+                <div className="mb-2 flex overflow-hidden rounded-lg border border-white/10 bg-[#0b0b0d] p-1">
+                   <button
+                     type="button"
+                     onClick={() => setRole("employee")}
+                     className={`flex-1 rounded-md py-2.5 text-xs font-bold uppercase tracking-[0.2em] transition-all ${role === "employee" ? "bg-[#ff2026]/20 text-[#ff2026] shadow-[0_0_15px_rgba(255,32,38,0.2)]" : "text-zinc-500 hover:text-white"}`}
+                   >
+                      Engineering
+                   </button>
+                   <button
+                     type="button"
+                     onClick={() => setRole("admin")}
+                     className={`flex-1 rounded-md py-2.5 text-xs font-bold uppercase tracking-[0.2em] transition-all ${role === "admin" ? "bg-white/10 text-white" : "text-zinc-500 hover:text-white"}`}
+                   >
+                      Administration
+                   </button>
+                </div>
+
                 <div className="grid gap-3">
                   <div className="text-xs font-bold uppercase tracking-[0.2em] text-[#ff2026]/80">Email Address</div>
                   <input
