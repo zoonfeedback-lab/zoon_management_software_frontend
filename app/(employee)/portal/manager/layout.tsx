@@ -6,7 +6,7 @@ import { ReactNode } from "react";
 
 const NAV_ITEMS = [
   { label: "Manager Dashboard", href: "/portal/manager", icon: "grid" },
-  { label: "Mission Nodes", href: "/portal/manager/projects", icon: "folder" },
+  { label: "Mission Logs", href: "/portal/manager/projects", icon: "folder" },
   { label: "Assignments", href: "/portal/manager/tasks", icon: "list" },
   { label: "Team", href: "/portal/manager/team", icon: "users" },
 ];
@@ -39,7 +39,7 @@ function NavIcon({ type, active }: { type: string; active: boolean }) {
 export default function CommandPortalLayout({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const sectionLabel = pathname.includes("/projects")
-    ? "Mission Nodes"
+    ? "Mission Logs"
     : pathname.includes("/tasks")
       ? "Assignment Control"
       : pathname.includes("/team")
@@ -104,7 +104,7 @@ export default function CommandPortalLayout({ children }: { children: ReactNode 
               </div>
               <div className="hidden items-center gap-6 md:flex">
                 <Link href="/portal/manager" className={`text-[10px] font-black uppercase tracking-[0.2em] ${pathname === '/portal/manager' ? 'text-[#ff2026]' : 'text-zinc-500 hover:text-white transition-colors'}`}>Workspaces</Link>
-                <Link href="/portal/manager/projects" className={`text-[10px] font-black uppercase tracking-[0.2em] ${pathname.includes('/projects') ? 'text-[#ff2026]' : 'text-zinc-500 hover:text-white transition-colors'}`}>Projects</Link>
+                <Link href="/portal/manager/projects" className={`text-[10px] font-black uppercase tracking-[0.2em] ${pathname.includes('/projects') ? 'text-[#ff2026]' : 'text-zinc-500 hover:text-white transition-colors'}`}>Mission Logs</Link>
                 <Link href="/portal/manager/team" className={`text-[10px] font-black uppercase tracking-[0.2em] ${pathname.includes('/team') ? 'text-[#ff2026]' : 'text-zinc-500 hover:text-white transition-colors'}`}>Team</Link>
                 <Link href="/portal/manager/tasks" className={`text-[10px] font-black uppercase tracking-[0.2em] ${pathname.includes('/tasks') ? 'text-[#ff2026]' : 'text-zinc-500 hover:text-white transition-colors'}`}>Tasks</Link>
               </div>
