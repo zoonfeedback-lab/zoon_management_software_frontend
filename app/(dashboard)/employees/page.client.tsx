@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Section, StatusBadge, GhostButton } from "@/components/ui";
+import Link from "next/link";
+import { Section, StatusBadge, GhostButton, Loader } from "@/components/ui";
 import { CreateEmployeeModal, EditEmployeeModal } from "@/components/modals";
 import { api } from "@/lib/api";
 
@@ -54,6 +55,10 @@ export default function EmployeesClient() {
     emp.jobTitle?.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
+  if (loading) {
+    return <div className="flex h-[400px] items-center justify-center"><Loader /></div>;
+  }
+
   return (
     <div className="grid gap-8">
       <div className="flex flex-col justify-between gap-5 md:flex-row md:items-end">
@@ -87,8 +92,8 @@ export default function EmployeesClient() {
         </div>
 
         {error && (
-          <div className="bg-brand/10 border border-brand/20 p-4 text-brand text-xs font-bold uppercase tracking-widest">
-             Critical Error: {error}
+          <div className="bg-[#38161a] border border-[#ff2026]/20 p-4 text-[#ff2026] text-[10px] font-black uppercase tracking-[0.2em] animate-pulse">
+             Operational Sync Failed: {error}
           </div>
         )}
 
@@ -108,15 +113,15 @@ export default function EmployeesClient() {
                 {filteredEmployees.map((emp) => (
                   <tr key={emp.id} className="hover:bg-white/[0.01] transition-colors group">
                     <td className="px-6 py-5">
-                      <div className="flex items-center gap-4">
-                        <div className="h-10 w-10 border border-brand/30 bg-zinc-900 grid place-items-center text-xs font-bold text-white uppercase">
+                      <Link href={`/employees/${emp.id}`} className="flex items-center gap-4 group/node cursor-pointer">
+                        <div className="h-10 w-10 border border-brand/30 bg-zinc-900 grid place-items-center text-xs font-bold text-white uppercase group-hover/node:border-brand transition-all">
                            {emp.fullName.split(' ').map(n => n[0]).join('')}
                         </div>
                         <div>
-                          <div className="text-sm font-bold text-white group-hover:text-brand transition-colors">{emp.fullName}</div>
+                          <div className="text-sm font-bold text-white group-hover/node:text-brand transition-colors">{emp.fullName}</div>
                           <div className="text-[10px] text-mute font-mono">{emp.email}</div>
                         </div>
-                      </div>
+                      </Link>
                     </td>
                     <td className="px-6 py-5">
                        <div className="text-xs font-bold text-zinc-300 uppercase tracking-wider">{emp.jobTitle || "Engineer"}</div>
@@ -141,8 +146,19 @@ export default function EmployeesClient() {
                     </td>
                     <td className="px-6 py-5 text-right">
                        <button 
-                         onClick={() => setSelectedEmployee(emp)}
-                         className="text-zinc-500 hover:text-white transition-colors p-2"
+                         onClick={async () => {
+                           try {
+                             const res = await api.get(`/employees/${emp.id}`);
+                             if (res.ok) {
+                               const json = await res.json();
+                               setSelectedEmployee(json.data);
+                             }
+                           } catch (err) {
+                             console.error("Failed to fetch node details:", err);
+                             setSelectedEmployee(emp); // Fallback to local data
+                           }
+                         }}
+                         className="text-zinc-500 hover:text-brand transition-colors p-2"
                        >
                           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
                        </button>
