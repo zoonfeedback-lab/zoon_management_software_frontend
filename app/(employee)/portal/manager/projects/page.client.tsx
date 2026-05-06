@@ -5,31 +5,48 @@ import { api } from "@/lib/api";
 import { GhostButton } from "@/components/ui";
 
 export default function MyProjectsClient() {
+  const [projects, setProjects] = useState<any[]>([]);
+  const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null);
   const [project, setProject] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const fetchProjectData = async () => {
+    const fetchAllProjects = async () => {
       try {
-        // Get all managed projects
-        const projectsRes = await api.get('/project-manager/projects');
-        const projectsData = await projectsRes.json();
+        const res = await api.get('/project-manager/projects');
+        const data = await res.json();
         
-        if (!projectsRes.ok) throw new Error(projectsData.message || 'Failed to load projects');
+        if (!res.ok) throw new Error(data.message || 'Failed to load projects');
         
-        if (projectsData.data && projectsData.data.length > 0) {
-          // Fetch detailed info for the first project
-          const firstProjectId = projectsData.data[0].id;
-          const detailRes = await api.get(`/project-manager/projects/${firstProjectId}`);
-          const detailData = await detailRes.json();
-          
-          if (!detailRes.ok) throw new Error(detailData.message || 'Failed to load project details');
-          
-          setProject(detailData.data);
+        if (data.data && data.data.length > 0) {
+          setProjects(data.data);
+          setSelectedProjectId(data.data[0].id);
         } else {
-          setProject(null); // No projects found
+          setProjects([]);
+          setProject(null);
+          setLoading(false);
         }
+      } catch (err: any) {
+        setError(err.message);
+        setLoading(false);
+      }
+    };
+
+    fetchAllProjects();
+  }, []);
+
+  useEffect(() => {
+    const fetchProjectDetail = async () => {
+      if (!selectedProjectId) return;
+      setLoading(true);
+      try {
+        const detailRes = await api.get(`/project-manager/projects/${selectedProjectId}`);
+        const detailData = await detailRes.json();
+        
+        if (!detailRes.ok) throw new Error(detailData.message || 'Failed to load project details');
+        
+        setProject(detailData.data);
       } catch (err: any) {
         setError(err.message);
       } finally {
@@ -37,8 +54,8 @@ export default function MyProjectsClient() {
       }
     };
 
-    fetchProjectData();
-  }, []);
+    fetchProjectDetail();
+  }, [selectedProjectId]);
 
   if (loading) {
     return <div className="flex h-screen items-center justify-center text-zinc-500 font-black uppercase tracking-[0.2em]">Loading Project Matrix...</div>;
@@ -77,6 +94,28 @@ export default function MyProjectsClient() {
   return (
     <div className="p-8 md:p-10 max-w-[1600px] mx-auto grid gap-6 h-full overflow-y-auto bg-[#09090b]">
       
+      {/* Top Header & Selector */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-2">
+         <div>
+            <h1 className="text-xl font-black text-white tracking-widest uppercase">Project Matrix</h1>
+            <p className="text-[10px] text-zinc-500 font-bold tracking-[0.2em] uppercase mt-1">Select Active Mission Node</p>
+         </div>
+         <div className="relative">
+            <select 
+               className="appearance-none bg-[#171719] border border-white/10 text-white text-xs font-bold tracking-widest uppercase px-5 py-3 pr-10 outline-none focus:border-[#ff2026] hover:border-white/20 transition-colors cursor-pointer w-full sm:w-[300px]"
+               value={selectedProjectId || ""}
+               onChange={(e) => setSelectedProjectId(e.target.value)}
+            >
+               {projects.map(p => (
+                  <option key={p.id} value={p.id}>{p.name} — {p.status}</option>
+               ))}
+            </select>
+            <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-zinc-500">
+               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M6 9l6 6 6-6"/></svg>
+            </div>
+         </div>
+      </div>
+
       {/* Top Section */}
       <div className="grid grid-cols-1 lg:grid-cols-[1fr_360px] gap-6">
         
