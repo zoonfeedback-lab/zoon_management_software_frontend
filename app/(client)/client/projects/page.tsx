@@ -1,7 +1,7 @@
 import ClientProjectsClient from "./page.client";
 
 export const metadata = {
-  title: "Mission Logs | Zoon Client Portal",
+  title: "My Projects | Zoon Client Portal",
   description: "Monitor active project status and deployment timelines.",
 };
 

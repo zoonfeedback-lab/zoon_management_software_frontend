@@ -3,136 +3,165 @@
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { api } from "@/lib/api";
-import { Loader, Section, StatusBadge, ProgressBar } from "@/components/ui";
+import { Loader, ProgressBar } from "@/components/ui";
 
 export default function ClientProjectDetails() {
   const params = useParams();
-  const router = useRouter();
   const [project, setProject] = useState<any>(null);
+  const [tasks, setTasks] = useState<any[]>([]);
+  const [deliverables, setDeliverables] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [showRevisionModal, setShowRevisionModal] = useState(false);
+  const [revisionText, setRevisionText] = useState("");
+  const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
-    const fetchProject = async () => {
+    const fetchAllData = async () => {
       try {
-        const res = await api.get(`/client/projects/${params.id}`);
-        if (res.ok) {
-          const json = await res.json();
-          setProject(json.data);
-        }
+        const [projectRes, tasksRes, deliverablesRes] = await Promise.all([
+          api.get(`/client/projects/${params.id}`),
+          api.get(`/client/projects/${params.id}/tasks`),
+          api.get(`/client/projects/${params.id}/deliverables`)
+        ]);
+
+        const projectData = await projectRes.json();
+        const tasksData = await tasksRes.json();
+        const deliverablesData = await deliverablesRes.json();
+
+        if (projectRes.ok) setProject(projectData.data);
+        if (tasksRes.ok) setTasks(tasksData.data || []);
+        if (deliverablesRes.ok) setDeliverables(deliverablesData.data || []);
       } catch (err) {
         console.error("Failed to sync project node:", err);
       } finally {
         setLoading(false);
       }
     };
-    fetchProject();
+    fetchAllData();
   }, [params.id]);
+
+  const handleRequestRevision = async () => {
+    if (!revisionText.trim()) return;
+    setSubmitting(true);
+    try {
+      const res = await api.post(`/client/projects/${params.id}/revisions`, {
+        description: revisionText
+      });
+      if (res.ok) {
+        setShowRevisionModal(false);
+        setRevisionText("");
+        alert("Revision request submitted to the engineering squad.");
+      }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setSubmitting(false);
+    }
+  };
 
   if (loading) return <div className="h-screen bg-[#050608] flex items-center justify-center"><Loader /></div>;
   if (!project) return <div className="h-screen bg-[#050608] flex items-center justify-center text-brand font-black uppercase tracking-widest">Node Offline: Project Not Found</div>;
 
+  const totalTasks = tasks.length;
+  const completedTasks = tasks.filter(t => t.status === 'DONE').length;
+  const progress = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
+
+  const phases = [
+    { name: "Initial Deployment", status: tasks.some(t => t.status === 'DONE') ? 'COMPLETED' : 'PENDING', desc: "Project initialization and core architecture setup." },
+    { name: "Active Development", status: tasks.some(t => t.status === 'IN_PROGRESS') ? 'IN PROGRESS' : (progress > 50 ? 'COMPLETED' : 'PENDING'), desc: "Feature implementation and engine building." },
+    { name: "Final Integration", status: progress === 100 ? 'COMPLETED' : 'PLANNED', desc: "Final stress testing and production handover." }
+  ];
+
   return (
-    <div className="min-h-screen bg-[#050608] text-white p-8">
-      <header className="mb-10 flex items-center justify-between gap-6 border-b border-white/5 pb-8">
+    <div className="min-h-screen bg-[#050608] text-white p-8 max-w-[1600px] mx-auto">
+      <header className="mb-10 flex flex-col md:flex-row md:items-center justify-between gap-6 border-b border-white/5 pb-8">
         <div>
            <div className="flex items-center gap-3 mb-2">
-              <span className="text-[10px] font-bold uppercase tracking-[0.3em] text-brand">Active Project /</span>
-              <span className="text-[10px] font-bold uppercase tracking-[0.3em] text-white">{project.name}</span>
+              <span className="text-[10px] font-bold uppercase tracking-[0.3em] text-brand">Mission ID /</span>
+              <span className="text-[10px] font-bold uppercase tracking-[0.3em] text-white">#{project.id.substring(0,8)}</span>
            </div>
-           <h1 className="text-4xl font-black italic text-white tracking-tight">{project.name}</h1>
+           <h1 className="text-4xl md:text-5xl font-black italic text-white tracking-tighter uppercase">{project.name}</h1>
         </div>
-        <button 
-          onClick={() => router.back()}
-          className="bg-brand px-6 py-3 text-[10px] font-black uppercase tracking-widest text-white hover:bg-[#ff343a] transition-all shadow-[0_0_20px_rgba(255,32,38,0.2)]"
-        >
-          Request Update
-        </button>
+        <div className="flex gap-3">
+           <button 
+             onClick={() => setShowRevisionModal(true)}
+             className="bg-brand px-8 py-4 text-[10px] font-black uppercase tracking-[0.2em] text-white hover:bg-[#ff343a] transition-all shadow-[0_0_30px_rgba(255,32,38,0.2)]"
+           >
+             Request Intel / Revision
+           </button>
+        </div>
       </header>
 
-      <div className="grid lg:grid-cols-3 gap-8 mb-8">
-        {/* Project Timeline */}
+      <div className="grid lg:grid-cols-3 gap-8 mb-12">
         <div className="lg:col-span-2 bg-[#0b0d12] border border-white/5 p-8 rounded-2xl relative overflow-hidden">
-           <div className="flex items-center justify-between mb-8">
-              <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-[#5e5f66] flex items-center gap-2">
-                 <span className="size-4 rounded-full border-2 border-brand grid place-items-center text-[8px]">!</span>
-                 Project Timeline
+           <div className="flex items-center justify-between mb-10">
+              <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-500 flex items-center gap-2">
+                 <span className="size-4 rounded-full border-2 border-brand grid place-items-center text-[8px] text-brand">!</span>
+                 Mission Timeline
               </h3>
-              <span className="text-[10px] font-bold uppercase tracking-widest text-[#5e5f66]">Est. Completion: Dec 15, 2023</span>
+              <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-600">Target Delivery: {project.deadline ? new Date(project.deadline).toLocaleDateString() : 'TBD'}</span>
            </div>
 
-           <div className="space-y-10 relative">
+           <div className="space-y-12 relative">
               <div className="absolute left-[11px] top-0 bottom-0 w-px bg-white/5" />
-              
-              <div className="flex gap-6 relative">
-                 <div className="size-6 rounded-full bg-brand grid place-items-center z-10 border-4 border-[#0b0d12]">
-                    <div className="size-1 bg-white rounded-full" />
-                 </div>
-                 <div className="flex-1">
-                    <div className="flex justify-between items-start mb-2">
-                       <h4 className="text-sm font-bold text-white uppercase tracking-wider">Phase 1: Architecture Blueprint</h4>
-                       <span className="text-[8px] font-black bg-brand/10 text-brand border border-brand/20 px-2 py-0.5 rounded-sm">COMPLETED</span>
-                    </div>
-                    <p className="text-xs text-[#5e5f66]">Infrastructure schema and distributed system mapping.</p>
-                 </div>
-              </div>
-
-              <div className="flex gap-6 relative">
-                 <div className="size-6 rounded-full bg-brand/20 grid place-items-center z-10 border-4 border-[#0b0d12] animate-pulse">
-                    <div className="size-1 bg-brand rounded-full" />
-                 </div>
-                 <div className="flex-1">
-                    <div className="flex justify-between items-start mb-2">
-                       <h4 className="text-sm font-bold text-white uppercase tracking-wider">Phase 2: Core Engine Development</h4>
-                       <span className="text-[8px] font-black bg-white/5 text-white border border-white/10 px-2 py-0.5 rounded-sm">IN PROGRESS</span>
-                    </div>
-                    <p className="text-xs text-[#5e5f66]">Building the primary event loop and memory buffer management.</p>
-                 </div>
-              </div>
-
-              <div className="flex gap-6 relative opacity-30">
-                 <div className="size-6 rounded-full bg-white/5 grid place-items-center z-10 border-4 border-[#0b0d12]">
-                    <div className="size-1 bg-[#5e5f66] rounded-full" />
-                 </div>
-                 <div className="flex-1">
-                    <div className="flex justify-between items-start mb-2">
-                       <h4 className="text-sm font-bold text-[#5e5f66] uppercase tracking-wider">Phase 3: Integration & Stress Testing</h4>
-                       <span className="text-[8px] font-black text-[#5e5f66]">PLANNED</span>
-                    </div>
-                    <p className="text-xs text-[#5e5f66]">Simulating 1M+ transactions per second in test environment.</p>
-                 </div>
-              </div>
-           </div>
-        </div>
-
-        {/* Assigned Team */}
-        <div className="bg-[#0b0d12] border border-white/5 p-8 rounded-2xl">
-           <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-[#5e5f66] mb-8 flex items-center gap-2">
-              👥 Assigned Team
-           </h3>
-           <div className="space-y-6">
-              {project.members.map((m: any) => (
-                <div key={m.id} className="flex items-center justify-between group cursor-default">
-                   <div className="flex items-center gap-4">
-                      <div className="h-10 w-10 bg-[#1a1c23] border border-white/5 grid place-items-center text-[10px] font-black text-white group-hover:border-brand transition-colors">
-                         {m.user.fullName.split(' ').map((n: string) => n[0]).join('')}
-                      </div>
-                      <div>
-                         <p className="text-xs font-bold text-white">{m.user.fullName}</p>
-                         <p className="text-[9px] font-medium text-[#5e5f66] uppercase tracking-widest">{m.user.jobTitle || "Engineer"}</p>
-                      </div>
+              {phases.map((phase, idx) => (
+                <div key={idx} className={`flex gap-6 relative ${phase.status === 'PLANNED' ? 'opacity-30' : ''}`}>
+                   <div className={`size-6 rounded-full ${phase.status === 'COMPLETED' ? 'bg-brand' : phase.status === 'IN PROGRESS' ? 'bg-brand/20 animate-pulse' : 'bg-white/5'} grid place-items-center z-10 border-4 border-[#0b0d12]`}>
+                      <div className={`size-1 rounded-full ${phase.status === 'COMPLETED' ? 'bg-white' : 'bg-brand'}`} />
                    </div>
-                   <div className="size-1.5 rounded-full bg-success shadow-[0_0_8px_rgba(34,197,94,0.4)]" />
+                   <div className="flex-1">
+                      <div className="flex justify-between items-start mb-2">
+                         <h4 className={`text-sm font-bold uppercase tracking-wider ${phase.status === 'PLANNED' ? 'text-zinc-600' : 'text-white'}`}>{phase.name}</h4>
+                         <span className={`text-[8px] font-black border px-2 py-0.5 rounded-sm ${
+                           phase.status === 'COMPLETED' ? 'bg-brand/10 text-brand border-brand/20' : 
+                           phase.status === 'IN PROGRESS' ? 'bg-white/5 text-white border-white/10' : 
+                           'text-zinc-700 border-zinc-800'
+                         }`}>{phase.status}</span>
+                      </div>
+                      <p className="text-xs text-zinc-500">{phase.desc}</p>
+                   </div>
                 </div>
               ))}
            </div>
-           <button className="w-full mt-10 py-4 border border-white/5 text-[9px] font-black uppercase tracking-[0.2em] text-[#5e5f66] hover:text-white hover:bg-white/5 transition-all">
-              View Full Directory
-           </button>
+        </div>
+
+        <div className="bg-[#0b0d12] border border-white/5 p-8 rounded-2xl flex flex-col justify-between relative overflow-hidden">
+           <div className="relative z-10">
+              <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-500 mb-8">Mission Completion</h3>
+              <div className="flex items-end justify-between mb-4">
+                 <span className="text-7xl font-black italic text-white tracking-tighter">{progress}%</span>
+                 <div className="text-right pb-2">
+                    <p className="text-[9px] font-black text-brand uppercase tracking-widest">{completedTasks} / {totalTasks}</p>
+                    <p className="text-[8px] font-bold text-zinc-600 uppercase">Tasks Executed</p>
+                 </div>
+              </div>
+              <ProgressBar value={progress} tone={progress === 100 ? "green" : "red"} />
+           </div>
+           <div className="mt-10 pt-8 border-t border-white/5 relative z-10">
+              <p className="text-[10px] font-black text-zinc-500 uppercase tracking-widest mb-4">Assigned Specialist Squad</p>
+              <div className="flex -space-x-3">
+                 {project.members?.map((m: any) => (
+                    <div
+                      key={m.id}
+                      className="size-10 rounded-full border-2 border-[#0b0d12] bg-zinc-800 flex items-center justify-center text-[10px] font-black text-white hover:z-10 hover:scale-110 transition-transform cursor-help"
+                      title={m.user.fullName}
+                    >
+                      {m.user.fullName.substring(0, 2).toUpperCase()}
+                    </div>
+                 ))}
+              </div>
+           </div>
+           <svg className="absolute -right-4 -bottom-4 size-32 text-white/[0.02]" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M12 2L4.5 20.29l.71.71L12 18l6.79 3 .71-.71z"/>
+           </svg>
         </div>
       </div>
 
-      {/* Assets Grid */}
-      <Section title="Project Assets & Documentation" eyebrow="Resource Hub" className="mb-8 bg-[#0b0d12] border-white/5">
+      <div className="bg-[#0b0d12] border border-white/5 rounded-2xl overflow-hidden mb-8">
+         <div className="p-8 border-b border-white/5 bg-white/[0.01]">
+            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-500 mb-1">Resource Hub</p>
+            <h3 className="text-xl font-black italic text-white uppercase tracking-tighter">Project Assets & Documentation</h3>
+         </div>
          <div className="overflow-x-auto">
             <table className="w-full text-left">
                <thead>
@@ -145,58 +174,60 @@ export default function ClientProjectDetails() {
                   </tr>
                </thead>
                <tbody className="divide-y divide-white/[0.02]">
-                  <tr className="group hover:bg-white/[0.01] transition-colors">
-                     <td className="px-8 py-6">
-                        <div className="flex items-center gap-3">
-                           <span className="text-xl">📄</span>
-                           <span className="text-xs font-bold text-white group-hover:text-brand transition-colors">Architecture_Spec_v2.pdf</span>
-                        </div>
-                     </td>
-                     <td className="px-8 py-6 text-[10px] font-mono text-[#5e5f66]">2.1.0</td>
-                     <td className="px-8 py-6 text-[10px] font-mono text-[#5e5f66]">12.4 MB</td>
-                     <td className="px-8 py-6 text-[10px] font-bold text-white/60">Alex Rivera</td>
-                     <td className="px-8 py-6 text-right">
-                        <button className="text-[10px] font-black uppercase tracking-widest text-brand hover:text-white transition-colors">Download</button>
-                     </td>
-                  </tr>
+                  {deliverables.length === 0 ? (
+                    <tr>
+                       <td colSpan={5} className="px-8 py-12 text-center text-[10px] font-bold text-zinc-700 uppercase tracking-[0.3em]">No assets synchronized in this node</td>
+                    </tr>
+                  ) : (
+                    deliverables.map(file => (
+                      <tr key={file.id} className="group hover:bg-white/[0.01] transition-colors">
+                         <td className="px-8 py-6">
+                            <div className="flex items-center gap-3">
+                               <div className="size-8 bg-zinc-900 border border-white/10 grid place-items-center text-xs group-hover:border-brand transition-colors">
+                                  {file.fileType?.includes('image') ? '🖼️' : '📄'}
+                               </div>
+                               <div>
+                                  <div className="font-bold text-white group-hover:text-brand transition-colors uppercase tracking-wider">{file.fileName}</div>
+                                  <div className="text-[8px] text-zinc-600 uppercase tracking-widest">ID: {file.id.substring(0,6)}</div>
+                               </div>
+                            </div>
+                         </td>
+                         <td className="px-8 py-6 text-[10px] font-black text-zinc-500 uppercase tracking-widest">{file.fileType || "DOCUMENT"}</td>
+                         <td className="px-8 py-6 font-mono text-[10px] text-zinc-500">{(file.fileSize / 1024 / 1024).toFixed(2)} MB</td>
+                         <td className="px-8 py-6 text-[10px] font-bold text-white/60">{file.uploadedBy?.fullName || "System"}</td>
+                         <td className="px-8 py-6 text-right">
+                            <a href={file.fileUrl} target="_blank" className="text-[10px] font-black uppercase tracking-widest text-brand hover:text-white transition-colors">Download</a>
+                         </td>
+                      </tr>
+                    ))
+                  )}
                </tbody>
             </table>
          </div>
-      </Section>
-
-      <div className="grid lg:grid-cols-2 gap-8">
-         <div className="bg-brand p-10 rounded-2xl relative overflow-hidden group">
-            <div className="relative z-10">
-               <h3 className="text-3xl font-black text-white mb-4 italic">Performance Milestone</h3>
-               <p className="text-sm text-white/80 max-w-md leading-relaxed mb-10">The core engine successfully processed 850k operations per second during internal alpha testing.</p>
-               <div className="flex items-end justify-between">
-                  <div>
-                     <p className="text-[10px] font-black uppercase tracking-widest text-white/60 mb-2">Optimization Target</p>
-                     <div className="h-1 w-64 bg-white/20 rounded-full overflow-hidden">
-                        <div className="h-full bg-white w-[85%]" />
-                     </div>
-                  </div>
-                  <span className="text-5xl font-black text-white italic">85%</span>
-               </div>
-            </div>
-            <div className="absolute top-0 right-0 -translate-y-1/2 translate-x-1/2 size-64 bg-white/10 rounded-full blur-3xl" />
-         </div>
-
-         <div className="bg-[#0b0d12] border border-white/5 p-10 rounded-2xl">
-            <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-[#5e5f66] mb-8">Upcoming Sprint</h3>
-            <div className="bg-[#10131b] border border-white/5 p-6 rounded-xl flex gap-6">
-               <div className="size-12 bg-brand/10 border border-brand/20 grid place-items-center text-brand text-xl">🚀</div>
-               <div>
-                  <h4 className="text-sm font-bold text-white uppercase tracking-wider mb-2">Scaling & Load Balancing</h4>
-                  <p className="text-xs text-[#5e5f66] leading-relaxed mb-4">Implementing automated horizontal scaling across k8s clusters with zero-downtime rebalancing.</p>
-                  <div className="flex gap-2">
-                     <span className="bg-white/5 px-2 py-1 text-[8px] font-black text-[#5e5f66] rounded-sm">INFRA</span>
-                     <span className="bg-white/5 px-2 py-1 text-[8px] font-black text-[#5e5f66] rounded-sm">PRIORITY: P0</span>
-                  </div>
-               </div>
-            </div>
-         </div>
       </div>
+
+      {showRevisionModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-6 bg-[#050608]/90 backdrop-blur-md">
+           <div className="bg-[#0b0d12] border border-white/10 p-8 w-full max-w-lg shadow-[0_0_50px_rgba(0,0,0,0.5)]">
+              <h3 className="text-xl font-black text-white italic uppercase tracking-tighter mb-2">Request Mission Intel / Revision</h3>
+              <p className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-6 border-b border-white/5 pb-4">Secure communication channel to project operatives</p>
+              <textarea 
+                value={revisionText}
+                onChange={(e) => setRevisionText(e.target.value)}
+                placeholder="Describe your requested changes or feedback in detail..."
+                className="w-full h-40 bg-[#10131b] border border-white/5 p-4 text-sm text-white placeholder:text-zinc-700 outline-none focus:border-brand/50 transition-colors resize-none mb-6 font-medium"
+              />
+              <div className="flex gap-4">
+                 <button onClick={handleRequestRevision} disabled={submitting} className="flex-1 bg-brand text-white font-black text-[10px] uppercase tracking-widest py-4 hover:bg-[#ff343a] transition-all disabled:opacity-50">
+                   {submitting ? "Transmitting..." : "Send Request"}
+                 </button>
+                 <button onClick={() => setShowRevisionModal(false)} className="px-8 border border-white/10 text-zinc-500 font-black text-[10px] uppercase tracking-widest hover:text-white hover:bg-white/5 transition-all">
+                   Cancel
+                 </button>
+              </div>
+           </div>
+        </div>
+      )}
     </div>
   );
 }
