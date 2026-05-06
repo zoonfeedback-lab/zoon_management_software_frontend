@@ -5,10 +5,10 @@ import { usePathname } from "next/navigation";
 import { ReactNode } from "react";
 
 const NAV_ITEMS = [
-  { label: "Manager Dashboard", href: "/portal/manager", icon: "grid" },
-  { label: "Mission Logs", href: "/portal/manager/projects", icon: "folder" },
-  { label: "Assignments", href: "/portal/manager/tasks", icon: "list" },
-  { label: "Team", href: "/portal/manager/team", icon: "users" },
+  { label: "Dashboard", href: "/portal/manager", icon: "grid" },
+  { label: "My Projects", href: "/portal/manager/projects", icon: "folder" },
+  { label: "Reviews", href: "/portal/manager/revisions", icon: "star" },
+  { label: "Documents", href: "/portal/manager/documents", icon: "file" },
 ];
 
 function NavIcon({ type, active }: { type: string; active: boolean }) {
@@ -31,6 +31,10 @@ function NavIcon({ type, active }: { type: string; active: boolean }) {
       return <svg {...shared}><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01" stroke={stroke} strokeWidth="1.8" strokeLinecap="round" /></svg>;
     case "users":
       return <svg {...shared}><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" stroke={stroke} strokeWidth="1.8" /><circle cx="9" cy="7" r="4" stroke={stroke} strokeWidth="1.8" /><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75" stroke={stroke} strokeWidth="1.8" /></svg>;
+    case "star":
+      return <svg {...shared}><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" stroke={stroke} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" /></svg>;
+    case "file":
+      return <svg {...shared}><path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z" stroke={stroke} strokeWidth="1.8" /><polyline points="13 2 13 9 20 9" stroke={stroke} strokeWidth="1.8" /></svg>;
     default:
       return null;
   }
