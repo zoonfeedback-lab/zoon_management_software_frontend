@@ -71,9 +71,9 @@ export default function MyProjectsClient() {
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-10">
         <div>
           <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.3em] text-zinc-500 mb-2">
-            <span className="hover:text-brand cursor-pointer transition-colors" onClick={() => setSelectedProjectId(null)}>Workspace</span>
+            <span className="hover:text-brand cursor-pointer transition-colors" onClick={() => setSelectedProjectId(null)}>Manager Hub</span>
             <span>/</span>
-            <span className="text-zinc-300">Projects</span>
+            <span className="text-zinc-300">Mission Nodes</span>
             {project && (
               <>
                 <span>/</span>
@@ -82,7 +82,7 @@ export default function MyProjectsClient() {
             )}
           </div>
           <h1 className="text-2xl md:text-3xl font-black text-white tracking-widest uppercase">
-            {project ? project.name : "Mission Control"}
+            {project ? project.name : "Manager Dashboard"}
           </h1>
         </div>
         
@@ -256,8 +256,8 @@ export default function MyProjectsClient() {
                    <div>
                       <div className="text-[9px] font-black text-zinc-500 tracking-[0.2em] uppercase mb-2">PROJECT_MANAGER</div>
                       <div className="flex items-center gap-3">
-                         <div className="w-8 h-8 rounded-full bg-brand grid place-items-center text-[10px] font-black text-white shadow-[0_0_15px_rgba(255,32,38,0.4)]">
-                            {project.projectManager?.fullName?.substring(0,2).toUpperCase() || "PM"}
+                         <div className="w-8 h-8 rounded-full bg-brand grid place-items-center text-[10px] font-black text-white shadow-[0_0_10px_rgba(255,32,38,0.4)]">
+                            {project.projectManager?.fullName?.substring(0,2).toUpperCase() || "MG"}
                          </div>
                          <span className="text-white text-sm font-bold tracking-widest uppercase">{project.projectManager?.fullName || "Unassigned"}</span>
                       </div>
