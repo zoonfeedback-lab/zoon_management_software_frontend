@@ -68,6 +68,13 @@ export function Sidebar({
         </div>
 
       <nav className="grid gap-1 mt-4">
+        <Link 
+          href="/internee"
+          className="mb-4 flex items-center gap-4 px-4 py-3 bg-brand text-white text-[10px] font-black uppercase tracking-[0.2em] rounded-sm shadow-[0_0_15px_rgba(255,32,38,0.2)] hover:bg-[#ff343a] transition-all"
+        >
+           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+           {ctaLabel}
+        </Link>
         {items.map((item) => {
           const active = pathname === item.href;
 
