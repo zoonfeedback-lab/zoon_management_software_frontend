@@ -82,10 +82,11 @@ export function ProgressBar({ value, tone = "red" }: { value: number; tone?: "re
   );
 }
 
-export function PrimaryButton({ children, className = "" }: { children: React.ReactNode; className?: string }) {
+export function PrimaryButton({ children, className = "", ...props }: React.ButtonHTMLAttributes<HTMLButtonElement>) {
   return (
     <button
-      className={`inline-flex items-center justify-center gap-2 bg-brand px-4 py-2.5 text-xs font-bold uppercase tracking-[0.16em] text-white transition hover:bg-[#ff343a] md:px-5 md:py-3 md:text-sm ${className}`.trim()}
+      {...props}
+      className={`inline-flex items-center justify-center gap-2 bg-brand px-4 py-2.5 text-xs font-bold uppercase tracking-[0.16em] text-white transition-all duration-300 hover:bg-[#ff343a] hover:-translate-y-0.5 hover:shadow-[0_0_25px_rgba(255,32,38,0.4)] active:translate-y-0 active:scale-95 md:px-5 md:py-3 md:text-sm ${className}`.trim()}
     >
       {children}
     </button>
