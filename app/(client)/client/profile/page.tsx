@@ -29,6 +29,27 @@ export default function ClientProfile() {
             email: json.data.email || "",
             phone: json.data.phone || "",
           });
+        } else {
+          // DEVELOPER PREVIEW MODE: Fallback to high-fidelity tactical profile if node is offline
+          console.warn("Client Profile Node Offline. Engaging Preview Mode.");
+          const mockProfile = {
+            id: 'client-001',
+            companyName: "ARIS TECHNOLOGIES",
+            contactPerson: "Marcus Thorne",
+            email: "m.thorne@aritech.io",
+            phone: "+1 (555) 082-9411",
+            projects: [
+              { id: 'proj-771', name: 'NOVA CORE V4', status: 'ACTIVE', startDate: '2023-01-15', deadline: '2024-10-24' },
+              { id: 'proj-422', name: 'ZENITH UI KIT', status: 'COMPLETED', startDate: '2022-06-10', deadline: '2023-03-05' }
+            ]
+          };
+          setProfile(mockProfile);
+          setFormData({
+            companyName: mockProfile.companyName,
+            contactPerson: mockProfile.contactPerson,
+            email: mockProfile.email,
+            phone: mockProfile.phone,
+          });
         }
       } catch (err) {
         console.error("Failed to fetch profile:", err);
