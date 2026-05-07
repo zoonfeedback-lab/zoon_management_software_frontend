@@ -137,7 +137,7 @@ export default function MyProjectsClient() {
               </div>
 
               {projects.length === 0 ? (
-                <div className="bg-[#171719] border-2 border-dashed border-white/5 p-20 flex flex-col items-center text-center">
+                <div className="bg-[#171719] border border-white/5 p-20 flex flex-col items-center text-center">
                   <div className="w-16 h-16 bg-brand/10 text-brand rounded-full flex items-center justify-center mb-6">
                     <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
                   </div>
@@ -299,7 +299,7 @@ export default function MyProjectsClient() {
                
                <div className="flex-1 p-6 flex flex-col gap-3">
                   {project.members?.map((member: any) => (
-                     <div key={member.id} className="bg-[#0b0b0d] border border-white/5 p-4 flex items-center justify-between group hover:border-white/10 transition-colors">
+                     <div key={member.id} className="bg-sidebar border border-white/5 p-4 flex items-center justify-between group hover:border-line transition-colors">
                         <div className="flex items-center gap-4">
                            <div className="w-10 h-10 flex-shrink-0 bg-zinc-800 grid place-items-center text-xs font-black text-white">
                               {member.user.fullName.substring(0,2).toUpperCase()}
