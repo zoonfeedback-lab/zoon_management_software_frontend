@@ -888,7 +888,7 @@ export function CreateTaskModal({
 
     // Clean data: don't send empty string for optional UUID
     const payload = { ...formData };
-    if (!payload.assignedToId) delete payload.assignedToId;
+    if (!payload.assignedToId) delete (payload as any).assignedToId;
 
     try {
       const res = await api.post("/tasks", payload);
@@ -1537,7 +1537,7 @@ export function EditEmployeeModal({
     try {
       const payload = {
         ...formData,
-        skills: formData.skills.split(",").map(s => s.trim()).filter(s => s),
+        skills: formData.skills.split(",").map((s: string) => s.trim()).filter((s: string) => s !== ""),
       };
       const res = await api.patch(`/employees/${employee.id}`, payload);
       if (res.ok) {
@@ -1671,3 +1671,372 @@ export function EditEmployeeModal({
     </Modal>
   );
 }
+
+export function CreateInternModal({
+  isOpen,
+  onClose,
+  onSuccess,
+}: {
+  isOpen: boolean;
+  onClose: () => void;
+  onSuccess?: () => void;
+}) {
+  const [loading, setLoading] = useState(false);
+  const [formData, setFormData] = useState({
+    email: "",
+    password: "",
+    fullName: "",
+    phone: "",
+    universityName: "",
+    degreeProgram: "",
+    currentSemester: "",
+    skills: "",
+    availabilityStatus: "AVAILABLE",
+  });
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    try {
+      const payload = {
+        ...formData,
+        skills: formData.skills.split(",").map((s: string) => s.trim()).filter((s: string) => s !== ""),
+      };
+      const res = await api.post("/interns", payload);
+      if (res.ok) {
+        if (onSuccess) onSuccess();
+        onClose();
+        setFormData({
+          email: "",
+          password: "",
+          fullName: "",
+          phone: "",
+          universityName: "",
+          degreeProgram: "",
+          currentSemester: "",
+          skills: "",
+          availabilityStatus: "AVAILABLE",
+        });
+      } else {
+        const errorData = await res.json();
+        alert(errorData.message || "Failed to create intern.");
+      }
+    } catch (err) {
+      console.error("Intern creation failed:", err);
+      alert("An unexpected error occurred.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <Modal isOpen={isOpen} onClose={onClose} title="Register New Internee" size="lg">
+      <form onSubmit={handleSubmit} className="grid gap-5">
+        <div className="grid md:grid-cols-2 gap-4">
+          <div className="grid gap-2">
+            <label className="text-xs font-black uppercase tracking-widest text-mute">Full Name *</label>
+            <input
+              required
+              type="text"
+              className="bg-black/50 border border-line text-white px-3 py-2 rounded-sm focus:border-brand focus:outline-none transition-colors"
+              placeholder="Ali Khan"
+              value={formData.fullName}
+              onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
+            />
+          </div>
+          <div className="grid gap-2">
+            <label className="text-xs font-black uppercase tracking-widest text-mute">Email *</label>
+            <input
+              required
+              type="email"
+              className="bg-black/50 border border-line text-white px-3 py-2 rounded-sm focus:border-brand focus:outline-none transition-colors"
+              placeholder="intern@example.com"
+              value={formData.email}
+              onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+            />
+          </div>
+        </div>
+
+        <div className="grid md:grid-cols-2 gap-4">
+          <div className="grid gap-2">
+            <label className="text-xs font-black uppercase tracking-widest text-mute">Password *</label>
+            <input
+              required
+              type="password"
+              className="bg-black/50 border border-line text-white px-3 py-2 rounded-sm focus:border-brand focus:outline-none transition-colors"
+              placeholder="Admin@123"
+              value={formData.password}
+              onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+            />
+          </div>
+          <div className="grid gap-2">
+            <label className="text-xs font-black uppercase tracking-widest text-mute">Phone *</label>
+            <input
+              required
+              type="text"
+              className="bg-black/50 border border-line text-white px-3 py-2 rounded-sm focus:border-brand focus:outline-none transition-colors"
+              placeholder="+923001234567"
+              value={formData.phone}
+              onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+            />
+          </div>
+        </div>
+
+        <div className="grid md:grid-cols-2 gap-4">
+          <div className="grid gap-2">
+            <label className="text-xs font-black uppercase tracking-widest text-mute">University Name *</label>
+            <input
+              required
+              type="text"
+              className="bg-black/50 border border-line text-white px-3 py-2 rounded-sm focus:border-brand focus:outline-none transition-colors"
+              placeholder="COMSATS University Islamabad"
+              value={formData.universityName}
+              onChange={(e) => setFormData({ ...formData, universityName: e.target.value })}
+            />
+          </div>
+          <div className="grid gap-2">
+            <label className="text-xs font-black uppercase tracking-widest text-mute">Degree Program *</label>
+            <input
+              required
+              type="text"
+              className="bg-black/50 border border-line text-white px-3 py-2 rounded-sm focus:border-brand focus:outline-none transition-colors"
+              placeholder="BS Computer Science"
+              value={formData.degreeProgram}
+              onChange={(e) => setFormData({ ...formData, degreeProgram: e.target.value })}
+            />
+          </div>
+        </div>
+
+        <div className="grid md:grid-cols-2 gap-4">
+          <div className="grid gap-2">
+            <label className="text-xs font-black uppercase tracking-widest text-mute">Current Semester *</label>
+            <input
+              required
+              type="text"
+              className="bg-black/50 border border-line text-white px-3 py-2 rounded-sm focus:border-brand focus:outline-none transition-colors"
+              placeholder="6th Semester"
+              value={formData.currentSemester}
+              onChange={(e) => setFormData({ ...formData, currentSemester: e.target.value })}
+            />
+          </div>
+          <div className="grid gap-2">
+            <label className="text-xs font-black uppercase tracking-widest text-mute">Availability Status</label>
+            <select
+              className="bg-black/50 border border-line text-white px-3 py-2 rounded-sm focus:border-brand focus:outline-none transition-colors"
+              value={formData.availabilityStatus}
+              onChange={(e) => setFormData({ ...formData, availabilityStatus: e.target.value })}
+            >
+              <option value="AVAILABLE">AVAILABLE</option>
+              <option value="ON_LEAVE">UNAVAILABLE</option>
+              <option value="BUSY">BUSY</option>
+            </select>
+          </div>
+        </div>
+
+        <div className="grid gap-2">
+          <label className="text-xs font-black uppercase tracking-widest text-mute">Skills (comma separated) *</label>
+          <input
+            required
+            type="text"
+            className="bg-black/50 border border-line text-white px-3 py-2 rounded-sm focus:border-brand focus:outline-none transition-colors"
+            placeholder="react, typescript, nextjs"
+            value={formData.skills}
+            onChange={(e) => setFormData({ ...formData, skills: e.target.value })}
+          />
+        </div>
+
+        <div className="flex gap-3 pt-4 border-t border-line">
+          <button
+            type="button"
+            onClick={onClose}
+            className="flex-1 px-4 py-3 border border-line text-mute font-bold uppercase tracking-widest text-xs hover:bg-white/5 rounded-sm"
+          >
+            Cancel
+          </button>
+          <button
+            type="submit"
+            disabled={loading}
+            className="flex-1 px-4 py-3 bg-brand text-white font-bold uppercase tracking-widest text-xs hover:bg-[#ff343a] rounded-sm shadow-lg disabled:opacity-50"
+          >
+            {loading ? "REGISTERING..." : "REGISTER INTERNEE"}
+          </button>
+        </div>
+      </form>
+    </Modal>
+  );
+}
+
+export function UpdateInternModal({
+  isOpen,
+  onClose,
+  intern,
+  onSuccess,
+}: {
+  isOpen: boolean;
+  onClose: () => void;
+  intern: any;
+  onSuccess?: () => void;
+}) {
+  const [loading, setLoading] = useState(false);
+  const [formData, setFormData] = useState({
+    fullName: intern?.fullName || "",
+    phone: intern?.phone || "",
+    universityName: intern?.universityName || intern?.department || "",
+    degreeProgram: intern?.degreeProgram || intern?.jobTitle || "",
+    currentSemester: intern?.currentSemester || intern?.experienceLevel || "",
+    skills: intern?.skills?.join(", ") || "",
+    availabilityStatus: intern?.availabilityStatus || "AVAILABLE",
+    isActive: intern?.isActive ?? true,
+  });
+
+  useEffect(() => {
+    if (intern) {
+      setFormData({
+        fullName: intern.fullName || "",
+        phone: intern.phone || "",
+        universityName: intern.universityName || intern.department || "",
+        degreeProgram: intern.degreeProgram || intern.jobTitle || "",
+        currentSemester: intern.currentSemester || intern.experienceLevel || "",
+        skills: intern.skills?.join(", ") || "",
+        availabilityStatus: intern.availabilityStatus || "AVAILABLE",
+        isActive: intern.isActive ?? true,
+      });
+    }
+  }, [intern]);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    try {
+      const payload = {
+        ...formData,
+        skills: formData.skills.split(",").map((s: string) => s.trim()).filter((s: string) => s !== ""),
+      };
+      const res = await api.patch(`/interns/${intern.id}`, payload);
+      if (res.ok) {
+        if (onSuccess) onSuccess();
+        onClose();
+      } else {
+        const errorData = await res.json();
+        alert(errorData.message || "Failed to update internee.");
+      }
+    } catch (err) {
+      console.error("Internee update failed:", err);
+      alert("An unexpected error occurred.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <Modal isOpen={isOpen} onClose={onClose} title="Modify Internee Node" size="lg">
+      <form onSubmit={handleSubmit} className="grid gap-5">
+        <div className="grid md:grid-cols-2 gap-4">
+          <div className="grid gap-2">
+            <label className="text-xs font-black uppercase tracking-widest text-mute">Full Name</label>
+            <input
+              type="text"
+              className="bg-black/50 border border-line text-white px-3 py-2 rounded-sm focus:border-brand focus:outline-none transition-colors"
+              value={formData.fullName}
+              onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
+            />
+          </div>
+          <div className="grid gap-2">
+            <label className="text-xs font-black uppercase tracking-widest text-mute">Phone</label>
+            <input
+              type="text"
+              className="bg-black/50 border border-line text-white px-3 py-2 rounded-sm focus:border-brand focus:outline-none transition-colors"
+              value={formData.phone}
+              onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+            />
+          </div>
+        </div>
+
+        <div className="grid md:grid-cols-2 gap-4">
+          <div className="grid gap-2">
+            <label className="text-xs font-black uppercase tracking-widest text-mute">University Name</label>
+            <input
+              type="text"
+              className="bg-black/50 border border-line text-white px-3 py-2 rounded-sm focus:border-brand focus:outline-none transition-colors"
+              value={formData.universityName}
+              onChange={(e) => setFormData({ ...formData, universityName: e.target.value })}
+            />
+          </div>
+          <div className="grid gap-2">
+            <label className="text-xs font-black uppercase tracking-widest text-mute">Degree Program</label>
+            <input
+              type="text"
+              className="bg-black/50 border border-line text-white px-3 py-2 rounded-sm focus:border-brand focus:outline-none transition-colors"
+              value={formData.degreeProgram}
+              onChange={(e) => setFormData({ ...formData, degreeProgram: e.target.value })}
+            />
+          </div>
+        </div>
+
+        <div className="grid md:grid-cols-2 gap-4">
+          <div className="grid gap-2">
+            <label className="text-xs font-black uppercase tracking-widest text-mute">Current Semester</label>
+            <input
+              type="text"
+              className="bg-black/50 border border-line text-white px-3 py-2 rounded-sm focus:border-brand focus:outline-none transition-colors"
+              value={formData.currentSemester}
+              onChange={(e) => setFormData({ ...formData, currentSemester: e.target.value })}
+            />
+          </div>
+          <div className="grid gap-2">
+            <label className="text-xs font-black uppercase tracking-widest text-mute">Availability Status</label>
+            <select
+              className="bg-black/50 border border-line text-white px-3 py-2 rounded-sm focus:border-brand focus:outline-none transition-colors"
+              value={formData.availabilityStatus}
+              onChange={(e) => setFormData({ ...formData, availabilityStatus: e.target.value })}
+            >
+              <option value="AVAILABLE">AVAILABLE</option>
+              <option value="ON_LEAVE">UNAVAILABLE</option>
+              <option value="BUSY">BUSY</option>
+            </select>
+          </div>
+        </div>
+
+        <div className="grid gap-2">
+          <label className="text-xs font-black uppercase tracking-widest text-mute">Skills (comma separated)</label>
+          <input
+            type="text"
+            className="bg-black/50 border border-line text-white px-3 py-2 rounded-sm focus:border-brand focus:outline-none transition-colors"
+            value={formData.skills}
+            onChange={(e) => setFormData({ ...formData, skills: e.target.value })}
+          />
+        </div>
+
+        <div className="flex items-center gap-3 py-2">
+          <input
+            type="checkbox"
+            id="isActive"
+            checked={formData.isActive}
+            onChange={(e) => setFormData({ ...formData, isActive: e.target.checked })}
+            className="h-4 w-4 rounded border-line bg-black/50 text-brand focus:ring-brand"
+          />
+          <label htmlFor="isActive" className="text-xs font-black uppercase tracking-widest text-white cursor-pointer">Node Active / In-Sync</label>
+        </div>
+
+        <div className="flex gap-3 pt-4 border-t border-line">
+          <button
+            type="button"
+            onClick={onClose}
+            className="flex-1 px-4 py-3 border border-line text-mute font-bold uppercase tracking-widest text-xs hover:bg-white/5 rounded-sm"
+          >
+            Cancel
+          </button>
+          <button
+            type="submit"
+            disabled={loading}
+            className="flex-1 px-4 py-3 bg-brand text-white font-bold uppercase tracking-widest text-xs hover:bg-[#ff343a] rounded-sm shadow-lg disabled:opacity-50"
+          >
+            {loading ? "SYNCHRONIZING..." : "UPDATE NODE"}
+          </button>
+        </div>
+      </form>
+    </Modal>
+  );
+}
+
+
