@@ -9,8 +9,8 @@ export const primaryNav: NavItem[] = [
   { href: "/reports", label: "Reports", icon: "list" },
   { href: "/internee", label: "Internee", icon: "users" },
   { href: "/settings", label: "Settings", icon: "settings" },
-];
-
+  { href: "/internship-applications", label: "Applications", icon: "users" },
+]
 export interface Client {
   id: string;
   name: string;
