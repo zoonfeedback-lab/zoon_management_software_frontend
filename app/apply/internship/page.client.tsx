@@ -177,7 +177,7 @@ export default function InternshipApplicationClient() {
         {/* Header */}
         <header className="mb-12 text-center">
           <div className="text-[10px] font-black uppercase tracking-[0.5em] text-brand mb-4 animate-pulse">Recruitment Terminal 24.A</div>
-          <h1 className="text-7xl md:text-8xl font-black italic tracking-tighter uppercase mb-2 text-white leading-none">ZOON</h1>
+          <h1 className="text-7xl md:text-8xl font-black italic tracking-tighter uppercase mb-2 text-white leading-none">ZOON BUSINESS ENVIRONMENT</h1>
           <h2 className="text-xl md:text-2xl font-black tracking-[0.3em] uppercase text-zinc-400 mb-6 border-y border-white/5 py-4">Engineering Hub</h2>
           <p className="text-zinc-500 text-[10px] font-black uppercase tracking-[0.4em] opacity-80">Submit your technical vectors for tactical evaluation.</p>
         </header>
@@ -372,11 +372,11 @@ export default function InternshipApplicationClient() {
 
               <div className="grid gap-6">
                 <InputField label="Most Confident Tool" value={formData.mostConfidentTool} onChange={v => updateField('mostConfidentTool', v)} placeholder="e.g. VS Code" error={errors.mostConfidentTool} />
-                <TextAreaField 
-                  label="Reason for Confidence" 
-                  value={formData.mostConfidentToolReason} 
-                  onChange={(v: string) => updateField('mostConfidentToolReason', v)} 
-                  placeholder="Explain your expertise..." 
+                <TextAreaField
+                  label="Reason for Confidence"
+                  value={formData.mostConfidentToolReason}
+                  onChange={(v: string) => updateField('mostConfidentToolReason', v)}
+                  placeholder="Explain your expertise..."
                   error={errors.mostConfidentToolReason}
                   className="h-24"
                 />

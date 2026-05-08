@@ -2,8 +2,8 @@ import Link from "next/link";
 import React from "react";
 
 export const metadata = {
-  title: "Welcome to ZOON | Recruitment Status",
-  description: "Your technical vector has been successfully transmitted to the ZOON engineering hub.",
+  title: "Application Received | ZOON BUSINESS ENVIRONMENT",
+  description: "Your internship application has been successfully received by the ZOON team.",
 };
 
 export default function WelcomePage() {
@@ -26,7 +26,7 @@ export default function WelcomePage() {
         </div>
         <div className="flex items-center gap-6">
           <span className="text-[10px] font-bold tracking-widest uppercase text-brand animate-pulse border border-brand/30 bg-brand/5 px-3 py-1 rounded-full">
-            CONNECTION SECURE
+            SUBMISSION COMPLETE
           </span>
         </div>
       </nav>
@@ -34,29 +34,29 @@ export default function WelcomePage() {
       {/* Hero Section */}
       <main className="relative z-10 flex-1 flex flex-col items-center justify-center px-6 py-24 text-center">
         <div className="mx-auto size-20 md:size-24 rounded-full border border-brand bg-brand/10 flex items-center justify-center text-4xl shadow-[0_0_50px_rgba(255,32,38,0.3)] animate-pulse mb-8">
-           <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#ff2026" strokeWidth="3"><path d="M20 6L9 17l-5-5"/></svg>
+          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#ff2026" strokeWidth="3"><path d="M20 6L9 17l-5-5" /></svg>
         </div>
-        
+
         <h1 className="text-5xl md:text-7xl lg:text-[7rem] font-black italic tracking-tighter uppercase leading-none mb-6 animate-fade-in-up animation-delay-100">
           <span className="text-transparent bg-clip-text bg-gradient-to-br from-white via-white to-zinc-600">WELCOME TO</span>
           <br />
-          <span className="text-brand">ZOON</span>
+          <span className="text-brand">ZOON BUSINESS ENVIRONMENT</span>
         </h1>
-        
+
         <div className="space-y-4 mb-12 animate-fade-in-up animation-delay-200">
-           <h2 className="text-xl md:text-2xl font-black tracking-[0.3em] uppercase text-zinc-300">Transmission Received</h2>
-           <p className="max-w-2xl text-sm md:text-base text-zinc-500 font-medium leading-relaxed mx-auto">
-             Your technical vector has been successfully synchronized with the ZOON core framework. 
-             Our senior engineering nodes are currently evaluating your profile. Please monitor your communications for further operational directives.
-           </p>
+          <h2 className="text-xl md:text-2xl font-black tracking-[0.3em] uppercase text-zinc-300">Internship form received</h2>
+          <p className="max-w-2xl text-sm md:text-base text-zinc-500 font-medium leading-relaxed mx-auto">
+            Your internship application has been successfully received. 
+            We will review your profile and get back to you soon. Please check your email for any updates.
+          </p>
         </div>
-        
+
         <div className="flex flex-col sm:flex-row items-center gap-6 animate-fade-in-up animation-delay-300">
-          <Link 
-            href="/" 
+          <Link
+            href="/"
             className="group px-8 py-4 border border-white/10 hover:border-brand/50 hover:bg-brand/10 text-white font-black uppercase tracking-widest text-xs rounded-sm transition-all flex items-center gap-3"
           >
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" /><polyline points="9 22 9 12 15 12 15 22" /></svg>
             Return to Terminal
           </Link>
         </div>

@@ -82,12 +82,13 @@ export function Sidebar({
             <Link
               key={`${item.href}-${item.label}`}
               href={item.href}
-              className={`group flex items-center gap-4 px-4 py-3.5 text-xs font-semibold tracking-wide transition ${
+              className={`group flex items-center gap-4 px-4 py-3.5 text-xs font-semibold tracking-wide transition relative ${
                 active
-                  ? "bg-[#ff2026]/10 text-[#ff2026] border-r-4 border-[#ff2026]"
+                  ? "bg-white/[0.05] text-white"
                   : "text-[#9897a1] hover:bg-white/[0.03] hover:text-white"
               }`}
             >
+              {active && <div className="absolute left-0 top-0 h-full w-1 bg-[#ff2026]" />}
               <NavIcon type={item.icon} active={active} />
               <span>{item.label}</span>
             </Link>
