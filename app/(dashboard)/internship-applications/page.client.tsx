@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { api } from "@/lib/api";
 import { Section, Loader, StatusBadge } from "@/components/ui";
 
@@ -58,6 +59,7 @@ const MOCK_APPLICATIONS: Application[] = [
 ];
 
 export default function InternshipApplicationsClient() {
+  const router = useRouter();
   const [applications, setApplications] = useState<Application[]>([]);
   const [loading, setLoading] = useState(true);
   const [isResilientMode, setIsResilientMode] = useState(false);
@@ -151,7 +153,10 @@ export default function InternshipApplicationsClient() {
                       <StatusBadge status={app.hasProjects ? "Projects Attached" : "Pending Review"} />
                     </td>
                     <td className="px-5 py-4 text-right">
-                      <button className="px-4 py-2 bg-white/5 hover:bg-white/10 border border-white/10 text-[9px] font-black tracking-widest uppercase text-white rounded transition-colors" onClick={() => alert("Candidate Dossier Module Not Yet Initialized.")}>
+                      <button 
+                        className="px-4 py-2 bg-white/5 hover:bg-white/10 border border-white/10 text-[9px] font-black tracking-widest uppercase text-white rounded transition-colors" 
+                        onClick={() => router.push(`/internship-applications/${app.id}`)}
+                      >
                          Inspect
                       </button>
                     </td>
