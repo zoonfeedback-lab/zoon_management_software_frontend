@@ -1340,7 +1340,6 @@ export function CreateEmployeeModal({
     email: "",
     password: "Admin@123",
     fullName: "",
-    role: "INTERNEE",
     phone: "",
     jobTitle: "",
     department: "Engineering",
@@ -1366,7 +1365,6 @@ export function CreateEmployeeModal({
           email: "",
           password: "Admin@123",
           fullName: "",
-          role: "INTERNEE",
           phone: "",
           jobTitle: "",
           department: "Engineering",
@@ -1427,16 +1425,15 @@ export function CreateEmployeeModal({
             />
           </div>
           <div className="grid gap-2">
-            <label className="text-[10px] font-black uppercase tracking-widest text-mute">Clearance Role</label>
-            <select
+            <label className="text-[10px] font-black uppercase tracking-widest text-mute">Initial Password</label>
+            <input
+              required
+              type="password"
               className="bg-black/40 border border-line text-white px-4 py-3 rounded-lg focus:border-brand outline-none"
-              value={formData.role}
-              onChange={(e) => setFormData({ ...formData, role: e.target.value })}
-            >
-              <option value="INTERNEE">INTERNEE</option>
-              <option value="CORE_TEAM">CORE TEAM</option>
-              <option value="ADMIN">ADMINISTRATOR</option>
-            </select>
+              placeholder="Admin@123"
+              value={formData.password}
+              onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+            />
           </div>
           <div className="grid gap-2">
             <label className="text-[10px] font-black uppercase tracking-widest text-mute">Job Title</label>
