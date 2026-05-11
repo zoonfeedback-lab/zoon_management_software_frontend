@@ -71,7 +71,7 @@ export function CreateProjectModal({
 
   useEffect(() => {
     if (isOpen) {
-      api.get("/clients").then(async (res) => {
+      api.get("/admin/clients").then(async (res) => {
         if (res.ok) {
           const data = await res.json();
           setClients(data.data);
@@ -1234,7 +1234,7 @@ export function CreateClientModal({
     e.preventDefault();
     setLoading(true);
     try {
-      const res = await api.post("/clients", formData);
+      const res = await api.post("/admin/clients", formData);
       if (res.ok) {
         const newClient = (await res.json()).data;
         if (onCreate) onCreate(newClient);

@@ -27,7 +27,7 @@ export default function OverviewClient() {
       const [pRes, uRes, cRes, tRes] = await Promise.all([
         api.get("/projects"),
         api.get("/employees"),
-        api.get("/clients"),
+        api.get("/admin/clients"),
         api.get("/tasks"),
       ]);
 

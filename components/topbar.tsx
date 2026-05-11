@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 
 function BellIcon() {
   return (
@@ -12,7 +13,15 @@ function BellIcon() {
   );
 }
 
-export function Topbar({ sectionTitle }: { sectionTitle?: string }) {
+export function Topbar({
+  sectionTitle,
+  ctaLabel,
+  ctaHref
+}: {
+  sectionTitle?: string;
+  ctaLabel?: string;
+  ctaHref?: string;
+}) {
   const router = useRouter();
   const [user, setUser] = useState<any>(null);
 
@@ -54,22 +63,31 @@ export function Topbar({ sectionTitle }: { sectionTitle?: string }) {
         </div>
 
         <div className="flex items-center gap-4">
+          {/* {ctaLabel && ctaHref && (
+            <Link 
+              href={ctaHref}
+              className="mr-2 flex items-center gap-3 bg-[#ff2026] px-5 py-2.5 text-[10px] font-black uppercase tracking-widest text-white transition hover:bg-[#ff343a] rounded-lg shadow-[0_4px_14px_rgba(255,32,38,0.2)]"
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              {ctaLabel}
+            </Link>
+          )} */}
           <button aria-label="Notifications" className="grid h-9 w-9 place-items-center rounded-lg text-zinc-400 transition hover:bg-white/5 hover:text-white">
             <BellIcon />
           </button>
-          <button 
+          <button
             onClick={handleLogout}
             title="Terminate Session"
             className="grid h-9 w-9 place-items-center rounded-lg text-[#ff2026]/70 transition hover:bg-[#ff2026]/10 hover:text-[#ff2026]"
           >
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" /><polyline points="16 17 21 12 16 7" /><line x1="21" y1="12" x2="9" y2="12" /></svg>
           </button>
-          
+
           <div className="relative ml-2 h-9 w-9 overflow-hidden rounded-lg bg-zinc-900 border border-white/10 p-0.5 shadow-xl group cursor-pointer hover:border-brand/40 transition-colors">
-             <div className="h-full w-full rounded-md bg-zinc-800 flex items-center justify-center text-[10px] font-black text-white italic">
-                {user?.fullName?.split(' ').map((n:any) => n[0]).join('') || '?'}
-             </div>
-             <div className="absolute bottom-0 right-0 h-2.5 w-2.5 rounded-full border-2 border-[#0b0b0d] bg-success" />
+            <div className="h-full w-full rounded-md bg-zinc-800 flex items-center justify-center text-[10px] font-black text-white italic">
+              {user?.fullName?.split(' ').map((n: any) => n[0]).join('') || '?'}
+            </div>
+            <div className="absolute bottom-0 right-0 h-2.5 w-2.5 rounded-full border-2 border-[#0b0b0d] bg-success" />
           </div>
         </div>
       </div>

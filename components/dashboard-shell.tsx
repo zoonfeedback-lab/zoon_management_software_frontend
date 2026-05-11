@@ -8,20 +8,22 @@ export function DashboardShell({
   brandTitle,
   brandSubtitle,
   ctaLabel,
+  ctaHref,
   sectionTitle,
 }: {
   children: React.ReactNode;
   navItems: NavItem[];
   brandTitle: string;
   brandSubtitle: string;
-  ctaLabel: string;
+  ctaLabel?: string;
+  ctaHref?: string;
   sectionTitle?: string;
 }) {
   return (
     <div className="grid min-h-screen bg-ink md:grid-cols-[224px_minmax(0,1fr)]">
-      <Sidebar title={brandTitle} subtitle={brandSubtitle} items={navItems} ctaLabel={ctaLabel} />
+      <Sidebar title={brandTitle} subtitle={brandSubtitle} items={navItems} />
       <div className="min-w-0">
-        <Topbar sectionTitle={sectionTitle} />
+        <Topbar sectionTitle={sectionTitle} ctaLabel={ctaLabel} ctaHref={ctaHref} />
         <main className="mx-auto w-full max-w-[1680px] px-4 py-4 md:px-5 md:py-5">{children}</main>
       </div>
     </div>

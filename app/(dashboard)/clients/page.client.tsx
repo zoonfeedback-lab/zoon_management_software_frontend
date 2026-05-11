@@ -23,7 +23,7 @@ export default function ClientsClient() {
 
   const fetchClients = async () => {
     try {
-      const response = await api.get("/clients");
+      const response = await api.get("/admin/clients");
 
       if (!response.ok) {
         throw new Error("Failed to fetch clients");

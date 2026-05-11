@@ -37,7 +37,7 @@ export default function CreateProjectPage() {
     const fetchData = async () => {
       try {
         const [clientsRes, usersRes] = await Promise.all([
-          api.get("/clients"),
+          api.get("/admin/clients"),
           api.get("/employees"),
         ]);
 

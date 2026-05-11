@@ -8,6 +8,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       brandTitle="ZOON"
       brandSubtitle="Engineering Hub"
       ctaLabel="Add Internee"
+      ctaHref="/internee"
     >
       {children}
     </DashboardShell>
